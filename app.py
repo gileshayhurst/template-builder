@@ -7,10 +7,12 @@ from config import ANTHROPIC_API_KEY, MODEL, PORT
 app = Flask(__name__)
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
-with open("prompts/gathering.txt") as f:
+BASE_DIR = os.path.dirname(__file__)
+
+with open(os.path.join(BASE_DIR, "prompts", "gathering.txt")) as f:
     GATHERING_PROMPT = f.read()
 
-with open("prompts/generation.txt") as f:
+with open(os.path.join(BASE_DIR, "prompts", "generation.txt")) as f:
     GENERATION_PROMPT = f.read()
 
 conversation_history = []
