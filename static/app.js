@@ -105,6 +105,16 @@ function estimateDuration() {
   return Math.round(Math.min(90, Math.max(2, raw)));
 }
 
+function durationViewModel() {
+  const estimate = estimateDuration();
+  const targetPct = state.durationTarget > 0 ? (state.durationTarget / 90) * 100 : 0;
+  const estimatePct = (estimate / 90) * 100;
+  const targetLabelText = state.durationTarget > 0
+    ? `● Target: ${state.durationTarget} min`
+    : "● No target set";
+  return { estimate, targetPct, estimatePct, targetLabelText };
+}
+
 function setDurationTarget(value) {
   state.durationTarget = Math.min(90, Math.max(0, value || 0));
   const slider = document.querySelector(".duration-slider");
@@ -115,9 +125,7 @@ function setDurationTarget(value) {
 }
 
 function updateDurationDisplay() {
-  const estimate = estimateDuration();
-  const targetPct = state.durationTarget > 0 ? (state.durationTarget / 90) * 100 : 0;
-  const estimatePct = (estimate / 90) * 100;
+  const { estimate, targetPct, estimatePct, targetLabelText } = durationViewModel();
 
   const targetFill = document.querySelector(".target-fill");
   const estimateFill = document.querySelector(".estimate-fill");
@@ -126,9 +134,7 @@ function updateDurationDisplay() {
 
   if (targetFill) targetFill.style.width = targetPct.toFixed(1) + "%";
   if (estimateFill) estimateFill.style.width = estimatePct.toFixed(1) + "%";
-  if (targetLabelEl) targetLabelEl.textContent = state.durationTarget > 0
-    ? `● Target: ${state.durationTarget} min`
-    : "● No target set";
+  if (targetLabelEl) targetLabelEl.textContent = targetLabelText;
   if (estimateLabelEl) estimateLabelEl.textContent = `● Est: ${estimate} min`;
 }
 
@@ -311,10 +317,7 @@ function renderSettingsStrip() {
   const depthLabels = { 0: "Breadth", 25: "Slightly Broad", 50: "Balanced", 75: "Slightly Deep", 100: "Deep" };
   const depthLabel = depthLabels[state.depthSliderValue] || "Balanced";
 
-  const estimate = estimateDuration();
-  const targetPct = state.durationTarget > 0 ? (state.durationTarget / 90) * 100 : 0;
-  const estimatePct = (estimate / 90) * 100;
-  const targetLabelText = state.durationTarget > 0 ? `● Target: ${state.durationTarget} min` : "● No target set";
+  const { estimate, targetPct, estimatePct, targetLabelText } = durationViewModel();
 
   strip.innerHTML = `
     <div class="settings-strip-header" onclick="toggleSection('settings')">
@@ -327,7 +330,7 @@ function renderSettingsStrip() {
         <div class="settings-control-label">Depth vs. Breadth</div>
         <input type="range" class="depth-slider" min="0" max="100" step="25"
           value="${state.depthSliderValue}"
-          oninput="applyDepthPreset(parseInt(this.value))">
+          oninput="applyDepthPreset(parseInt(this.value, 10))">
         <div class="depth-slider-labels">
           <span>Breadth</span>
           <span class="depth-active-label">${escHtml(depthLabel)}</span>
@@ -351,11 +354,11 @@ function renderSettingsStrip() {
         <div class="duration-inputs">
           <input type="range" class="duration-slider" min="0" max="90" step="5"
             value="${state.durationTarget}"
-            oninput="setDurationTarget(parseInt(this.value))">
-          <input type="number" class="duration-number" min="0" max="90"
+            oninput="setDurationTarget(parseInt(this.value, 10))">
+          <input type="number" class="duration-number" min="0" max="90" step="5"
             value="${state.durationTarget || ""}"
             placeholder="—"
-            oninput="setDurationTarget(parseInt(this.value) || 0)">
+            oninput="setDurationTarget(parseInt(this.value, 10) || 0)">
           <span class="duration-unit">min</span>
         </div>
       </div>
