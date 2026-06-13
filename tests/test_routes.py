@@ -65,9 +65,9 @@ def test_chat_returns_sse(client):
         resp = client.post("/chat",
             data=json.dumps({"message": "Hello"}),
             content_type="application/json")
+        body = resp.data.decode()  # consume inside patch so generator runs with mock
     assert resp.status_code == 200
     assert "text/event-stream" in resp.content_type
-    body = resp.data.decode()
     assert "event: chat_token" in body
     assert "Hi " in body
     assert "event: done" in body
@@ -76,9 +76,10 @@ def test_chat_returns_sse(client):
 def test_chat_appends_to_history(client):
     with patch("app.client") as mock_client:
         mock_client.messages.stream.return_value = make_mock_stream(["Reply"])
-        client.post("/chat",
+        resp = client.post("/chat",
             data=json.dumps({"message": "Hello"}),
             content_type="application/json")
+        _ = resp.data  # consume stream so generator runs to completion
     assert len(app_module.conversation_history) == 2
     assert app_module.conversation_history[0] == {"role": "user", "content": "Hello"}
     assert app_module.conversation_history[1]["role"] == "assistant"
@@ -101,7 +102,7 @@ def test_chat_emits_section_update_on_tool_call(client):
         resp = client.post("/chat",
             data=json.dumps({"message": "Hello"}),
             content_type="application/json")
-    body = resp.data.decode()
+        body = resp.data.decode()  # consume inside patch so both stream calls use mocks
     assert "event: section_update" in body
     assert "focus" in body
     assert "Anchor on cooking." in body
