@@ -311,17 +311,31 @@ function renderMetadata() {
 }
 
 function renderPacing() {
-  const body = document.createElement("div");
+  const outer = document.createElement("div");
   for (const [key, label] of Object.entries(PACING_LABELS)) {
-    const rule = document.createElement("div");
-    rule.className = "pacing-rule";
-    rule.innerHTML = `
-      <label>${escHtml(label)}</label>
-      <textarea oninput="state.sections.pacing['${key}'] = this.value">${escHtml(state.sections.pacing[key])}</textarea>
-      <button class="reset-link" onclick="resetPacing('${key}')">Reset to default</button>`;
-    body.appendChild(rule);
+    const ruleKey = `pacing-${key}`;
+    const collapsed = state.collapsedSections.has(ruleKey);
+
+    const ruleBlock = document.createElement("div");
+    ruleBlock.className = "pacing-rule";
+
+    const ruleHeader = document.createElement("div");
+    ruleHeader.className = "pacing-rule-header";
+    ruleHeader.innerHTML = `<span class="section-chevron">${collapsed ? "▸" : "▾"}</span><span>${escHtml(label)}</span>`;
+    ruleHeader.onclick = () => toggleSection(ruleKey);
+    ruleBlock.appendChild(ruleHeader);
+
+    if (!collapsed) {
+      const ruleBody = document.createElement("div");
+      ruleBody.innerHTML = `
+        <textarea oninput="state.sections.pacing['${key}'] = this.value">${escHtml(state.sections.pacing[key])}</textarea>
+        <button class="reset-link" onclick="resetPacing('${key}')">Reset to preset</button>`;
+      ruleBlock.appendChild(ruleBody);
+    }
+
+    outer.appendChild(ruleBlock);
   }
-  return sectionBlock("section-pacing", "Pacing Instructions", body, "pacing");
+  return sectionBlock("section-pacing", "Pacing Instructions", outer, "pacing");
 }
 
 function renderFocus() {
@@ -343,37 +357,46 @@ function renderTopics() {
 }
 
 function renderTopicBlock(topic) {
+  const topicKey = `topic-${topic.index}`;
+  const collapsed = state.collapsedSections.has(topicKey);
+
   const block = document.createElement("div");
   block.className = "topic-block";
 
-  const removeBtn = document.createElement("button");
-  removeBtn.className = "remove-topic-btn";
-  removeBtn.textContent = "×";
-  removeBtn.onclick = () => removeTopicManually(topic.index);
-  block.appendChild(removeBtn);
+  const topicHeader = document.createElement("div");
+  topicHeader.className = "topic-block-header";
+  topicHeader.innerHTML = `
+    <span class="section-chevron">${collapsed ? "▸" : "▾"}</span>
+    <input value="${escHtml(topic.title)}" placeholder="Topic title…"
+      oninput="updateTopicField(${topic.index}, 'title', this.value)"
+      onclick="event.stopPropagation()">
+    <button class="remove-topic-btn" onclick="event.stopPropagation(); removeTopicManually(${topic.index})">×</button>`;
+  topicHeader.onclick = () => toggleSection(topicKey);
+  block.appendChild(topicHeader);
 
-  const titleWrap = document.createElement("div");
-  titleWrap.className = "topic-title";
-  titleWrap.innerHTML = `<input value="${escHtml(topic.title)}" placeholder="Topic title…"
-    oninput="updateTopicField(${topic.index}, 'title', this.value)">`;
-  block.appendChild(titleWrap);
+  if (!collapsed) {
+    const body = document.createElement("div");
+    body.className = "topic-block-body";
 
-  const list = document.createElement("div");
-  list.className = "items-list";
-  topic.core.forEach((text, i) => list.appendChild(renderItemRow("core", topic.index, i, text)));
-  topic.probe.forEach((text, i) => list.appendChild(renderItemRow("probe", topic.index, i, text)));
-  block.appendChild(list);
+    const list = document.createElement("div");
+    list.className = "items-list";
+    topic.core.forEach((text, i) => list.appendChild(renderItemRow("core", topic.index, i, text)));
+    topic.probe.forEach((text, i) => list.appendChild(renderItemRow("probe", topic.index, i, text)));
+    body.appendChild(list);
 
-  const btnRow = document.createElement("div");
-  btnRow.style.cssText = "display:flex;gap:6px;margin-top:4px;";
-  const ac = document.createElement("button");
-  ac.className = "add-item-btn"; ac.textContent = "+ Core item";
-  ac.onclick = () => addItem(topic.index, "core");
-  const ap = document.createElement("button");
-  ap.className = "add-item-btn"; ap.textContent = "+ Probe item";
-  ap.onclick = () => addItem(topic.index, "probe");
-  btnRow.appendChild(ac); btnRow.appendChild(ap);
-  block.appendChild(btnRow);
+    const btnRow = document.createElement("div");
+    btnRow.style.cssText = "display:flex;gap:6px;margin-top:4px;";
+    const ac = document.createElement("button");
+    ac.className = "add-item-btn"; ac.textContent = "+ Core item";
+    ac.onclick = () => addItem(topic.index, "core");
+    const ap = document.createElement("button");
+    ap.className = "add-item-btn"; ap.textContent = "+ Probe item";
+    ap.onclick = () => addItem(topic.index, "probe");
+    btnRow.appendChild(ac); btnRow.appendChild(ap);
+    body.appendChild(btnRow);
+
+    block.appendChild(body);
+  }
 
   return block;
 }

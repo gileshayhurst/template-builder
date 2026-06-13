@@ -80,10 +80,17 @@ body {
 .section-chevron { margin-right: 6px; font-size: 10px; color: #999; display: inline-block; width: 10px; }
 
 .pacing-rule { margin-bottom: 10px; }
-.pacing-rule label { font-size: 11px; font-weight: 600; color: #555; display: block; margin-bottom: 3px; }
+.pacing-rule-header {
+  display: flex; align-items: center; cursor: pointer;
+  font-size: 11px; font-weight: 600; color: #555;
+  padding: 4px 0; user-select: none;
+}
+.pacing-rule-header:hover { color: #4f46e5; }
+.pacing-rule-header .section-chevron { color: #aaa; }
 .pacing-rule textarea {
   width: 100%; border: 1px solid #ddd; border-radius: 4px;
   padding: 6px 8px; font-size: 12px; font-family: inherit; resize: vertical; min-height: 48px; outline: none;
+  margin-top: 4px;
 }
 .pacing-rule textarea:focus { border-color: #4f46e5; }
 .reset-link {
@@ -110,10 +117,17 @@ body {
   border: 1px solid #e8e8e8; border-radius: 6px;
   padding: 10px; margin-bottom: 8px; position: relative;
 }
-.topic-title input {
-  width: 100%; border: none; border-bottom: 1px solid #ddd;
-  padding: 3px 0; font-weight: 600; font-size: 13px; outline: none; margin-bottom: 8px; font-family: inherit;
+.topic-block-header {
+  display: flex; align-items: center; gap: 6px;
+  cursor: pointer; padding-bottom: 4px; user-select: none;
 }
+.topic-block-header input {
+  flex: 1; border: none; border-bottom: 1px solid #ddd;
+  padding: 3px 0; font-weight: 600; font-size: 13px; outline: none;
+  font-family: inherit; cursor: text; background: transparent;
+}
+.topic-block-header input:focus { border-bottom-color: #4f46e5; }
+.topic-block-body { padding-top: 8px; }
 .items-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
 .item-row { display: flex; gap: 6px; align-items: flex-start; }
 .item-badge {
@@ -133,8 +147,7 @@ body {
 }
 .add-item-btn:hover { border-color: #4f46e5; color: #4f46e5; }
 .remove-topic-btn {
-  position: absolute; top: 8px; right: 8px;
-  background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; line-height: 1;
+  background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; line-height: 1; flex-shrink: 0;
 }
 .remove-topic-btn:hover { color: #ef4444; }
 
