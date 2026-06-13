@@ -104,6 +104,7 @@ async function streamFromServer(message) {
       body: JSON.stringify({ message })
     });
 
+    if (!resp.ok) throw new Error(`Server error ${resp.status}`);
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
@@ -159,15 +160,17 @@ function applyUpdate(update) {
     state.sections.focus = payload;
     flashSection("section-focus");
   } else if (section === "topic") {
-    const idx = state.sections.topics.findIndex(t => t.index === payload.index);
-    if (idx >= 0) state.sections.topics[idx] = payload;
+    const topic = { ...payload, index: parseInt(payload.index, 10) };
+    const idx = state.sections.topics.findIndex(t => t.index === topic.index);
+    if (idx >= 0) state.sections.topics[idx] = topic;
     else {
-      state.sections.topics.push(payload);
+      state.sections.topics.push(topic);
       state.sections.topics.sort((a, b) => a.index - b.index);
     }
     flashSection("section-topics");
   } else if (section === "remove_topic") {
-    state.sections.topics = state.sections.topics.filter(t => t.index !== payload.index);
+    const removeIdx = parseInt(payload.index, 10);
+    state.sections.topics = state.sections.topics.filter(t => t.index !== removeIdx);
     flashSection("section-topics");
   } else if (section === "expansion") {
     state.sections.expansion = payload;
