@@ -174,14 +174,20 @@ def export_route():
 
     template_text = response.content[0].text
 
+    def safe_str(s, default=""):
+        return "".join(c if c.isalnum() or c in " -_" else "" for c in str(s or default)).strip()
+
     title = sections.get("metadata", {}).get("title", "template")
     version = sections.get("metadata", {}).get("version", "1.0")
     date = sections.get("metadata", {}).get("date", "")
-    safe_title = "".join(c if c.isalnum() or c in " -_" else "" for c in title).strip().replace(" ", "-")
-    filename = f"{safe_title}-v{version}-{date}.txt"
+    safe_title = safe_str(title, "template").replace(" ", "-")
+    safe_version = safe_str(version, "1.0")
+    safe_date = safe_str(date)
+    filename = f"{safe_title}-v{safe_version}-{safe_date}.txt"
 
-    os.makedirs("output", exist_ok=True)
-    with open(os.path.join("output", filename), "w", encoding="utf-8") as f:
+    output_dir = os.path.join(BASE_DIR, "output")
+    os.makedirs(output_dir, exist_ok=True)
+    with open(os.path.join(output_dir, filename), "w", encoding="utf-8") as f:
         f.write(template_text)
 
     return jsonify({"template": template_text, "filename": filename})
