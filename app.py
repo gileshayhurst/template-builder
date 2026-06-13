@@ -107,3 +107,70 @@ def process_tool_call(name, input_data):
         return {"section": "expansion", "payload": input_data["items"]}
     else:
         raise ValueError(f"Unknown tool: {name}")
+
+
+def stream_conversation(new_message):
+    conversation_history.append({"role": "user", "content": new_message})
+    chunks = []
+
+    while True:
+        with client.messages.stream(
+            model=MODEL,
+            max_tokens=4096,
+            system=GATHERING_PROMPT,
+            tools=GATHERING_TOOLS,
+            messages=conversation_history
+        ) as stream:
+            for text in stream.text_stream:
+                chunks.append(f"event: chat_token\ndata: {json.dumps(text)}\n\n")
+            final = stream.get_final_message()
+
+        conversation_history.append({
+            "role": "assistant",
+            "content": [b.model_dump() for b in final.content]
+        })
+
+        if final.stop_reason == "tool_use":
+            tool_results = []
+            for block in final.content:
+                if block.type == "tool_use":
+                    update = process_tool_call(block.name, block.input)
+                    chunks.append(f"event: section_update\ndata: {json.dumps(update)}\n\n")
+                    tool_results.append({
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": "Done"
+                    })
+            conversation_history.append({"role": "user", "content": tool_results})
+        else:
+            break
+
+    chunks.append(f"event: done\ndata: {{}}\n\n")
+    return chunks
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    message = request.json["message"]
+    chunks = stream_conversation(message)
+    return Response(iter(chunks), mimetype="text/event-stream")
+
+
+@app.route("/export", methods=["POST"])
+def export_route():
+    pass  # implemented in Task 5
+
+
+@app.route("/reset", methods=["POST"])
+def reset():
+    conversation_history.clear()
+    return jsonify({"ok": True})
+
+
+if __name__ == "__main__":
+    app.run(port=PORT, debug=True)
