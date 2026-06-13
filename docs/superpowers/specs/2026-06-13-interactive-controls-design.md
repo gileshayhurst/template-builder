@@ -40,13 +40,13 @@ A `collapsedSections` Set is added to the JS state object:
 
 ```js
 const state = {
-  collapsedSections: new Set(),   // keys of currently-collapsed sections
+  collapsedSections: new Set(["settings"]),  // "settings" pre-collapsed on load
   streaming: false,
   ...
 };
 ```
 
-Starts empty (all sections expanded). No persistence across page reloads in v1.
+All template sections start expanded. The settings strip starts collapsed (key `"settings"` pre-populated). No persistence across page reloads in v1.
 
 ### Rendering
 
@@ -126,7 +126,7 @@ expansion_bonus               = expansion.length × 0.75
 if focus present              → raw += 2
 
 # Depth slider adjustment
-depth_factor = lerp(0.85, 1.20, slider_value / 100)
+depth_factor = lerp(0.80, 1.20, slider_value / 100)  # 0.5 → exactly ×1.0 at Balanced
 raw × depth_factor
 
 # Final clamp
