@@ -39,6 +39,8 @@ Use these for secondary discovery as instructed
 ## Rules
 - Every core item: prefix with "- [Core] "
 - Every probe item: prefix with "- [Probe] "
+- If a topic has no probe items, omit all [Probe] lines for that topic entirely
+- Repeat the topic block pattern for every topic in the topics array
 - Preserve the blank lines between pacing rule groups exactly as shown above
 - Two blank lines between the last pacing rule and the "# Main Interview Guide" heading
 - Output nothing except the formatted template

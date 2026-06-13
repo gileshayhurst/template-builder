@@ -15,6 +15,7 @@ Your goal is to understand the client's research goals and build a complete inte
 3. add_topic — one call per topic as you learn each theme (title + core + optional probes)
 4. update_expansion — near the end, after main topics are established
 5. update_pacing — ONLY if the client explicitly requests a change to pacing rules; otherwise leave defaults as-is
+6. remove_topic — call if the client asks to remove or discard a topic that was already added
 
 ## Questions to Cover
 - What experience or topic should the interview explore?
