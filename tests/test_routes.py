@@ -106,3 +106,29 @@ def test_chat_emits_section_update_on_tool_call(client):
     assert "event: section_update" in body
     assert "focus" in body
     assert "Anchor on cooking." in body
+
+
+def test_export_returns_template(client):
+    sections = {
+        "metadata": {"title": "Cooking Test", "version": "1.0", "date": "2026-06-12"},
+        "pacing": {"do_not_rush": "Take it slow."},
+        "focus": "Anchor on one cooking occasion.",
+        "topics": [{"index": 1, "title": "Confirm occasion", "core": ["Identify dish"], "probe": []}],
+        "expansion": ["role of family"]
+    }
+
+    mock_resp = MagicMock()
+    mock_resp.content = [MagicMock(text="[Prompt metadata only: Cooking Test | v1.0 | 2026-06-12]\n\n# Pacing...")]
+
+    with patch("app.client") as mock_client:
+        mock_client.messages.create.return_value = mock_resp
+        resp = client.post("/export",
+            data=json.dumps({"sections": sections}),
+            content_type="application/json")
+
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert "template" in data
+    assert "filename" in data
+    assert "Cooking-Test" in data["filename"]
+    assert data["filename"].endswith(".txt")

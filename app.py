@@ -160,7 +160,31 @@ def chat():
 
 @app.route("/export", methods=["POST"])
 def export_route():
-    pass  # implemented in Task 5
+    sections = request.json["sections"]
+
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=4096,
+        system=GENERATION_PROMPT,
+        messages=[{
+            "role": "user",
+            "content": f"Format this template data into the exact template syntax:\n\n{json.dumps(sections, indent=2)}"
+        }]
+    )
+
+    template_text = response.content[0].text
+
+    title = sections.get("metadata", {}).get("title", "template")
+    version = sections.get("metadata", {}).get("version", "1.0")
+    date = sections.get("metadata", {}).get("date", "")
+    safe_title = "".join(c if c.isalnum() or c in " -_" else "" for c in title).strip().replace(" ", "-")
+    filename = f"{safe_title}-v{version}-{date}.txt"
+
+    os.makedirs("output", exist_ok=True)
+    with open(os.path.join("output", filename), "w", encoding="utf-8") as f:
+        f.write(template_text)
+
+    return jsonify({"template": template_text, "filename": filename})
 
 
 @app.route("/reset", methods=["POST"])
