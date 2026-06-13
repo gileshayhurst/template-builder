@@ -66,6 +66,17 @@ const PACING_DEPTH_PRESETS = {
   }
 };
 
+function getDepthPreset(value) {
+  const key = { 0: "breadth", 25: "slightly_broad", 50: "balanced", 75: "slightly_deep", 100: "deep" }[value];
+  return PACING_DEPTH_PRESETS[key] || PACING_DEPTH_PRESETS.balanced;
+}
+
+function applyDepthPreset(value) {
+  state.depthSliderValue = value;
+  state.sections.pacing = { ...getDepthPreset(value) };
+  renderTemplate();
+}
+
 // ─── STATE ────────────────────────────────────────────────────────────────────
 
 const state = {
@@ -240,12 +251,34 @@ function renderSettingsStrip() {
   const strip = document.getElementById("settings-strip");
   if (!strip) return;
   const collapsed = state.collapsedSections.has("settings");
+
+  const depthLabels = { 0: "Breadth", 25: "Slightly Broad", 50: "Balanced", 75: "Slightly Deep", 100: "Deep" };
+  const depthLabel = depthLabels[state.depthSliderValue] || "Balanced";
+
   strip.innerHTML = `
     <div class="settings-strip-header" onclick="toggleSection('settings')">
       <span class="section-chevron">${collapsed ? "▸" : "▾"}</span>
       <span>Settings</span>
     </div>
-    ${collapsed ? "" : `<div class="settings-strip-body"></div>`}
+    ${collapsed ? "" : `
+    <div class="settings-strip-body">
+      <div class="settings-control">
+        <div class="settings-control-label">Depth vs. Breadth</div>
+        <input type="range" class="depth-slider" min="0" max="100" step="25"
+          value="${state.depthSliderValue}"
+          oninput="applyDepthPreset(parseInt(this.value))">
+        <div class="depth-slider-labels">
+          <span>Breadth</span>
+          <span class="depth-active-label">${escHtml(depthLabel)}</span>
+          <span>Deep</span>
+        </div>
+      </div>
+      <div class="settings-control" id="duration-control">
+        <div class="settings-control-label">Interview Duration</div>
+        <p style="font-size:11px;color:#aaa;margin-top:4px;">Coming soon</p>
+      </div>
+    </div>
+    `}
   `;
 }
 
@@ -438,7 +471,7 @@ function renderExpansion() {
 // ─── EDITING HELPERS ──────────────────────────────────────────────────────────
 
 function resetPacing(rule) {
-  state.sections.pacing[rule] = PACING_DEFAULTS[rule];
+  state.sections.pacing[rule] = getDepthPreset(state.depthSliderValue)[rule];
   renderTemplate();
 }
 

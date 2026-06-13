@@ -43,6 +43,13 @@ body {
   font-size: 10px; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.06em; color: #888; margin-bottom: 6px;
 }
+.depth-slider {
+  width: 100%; accent-color: #4f46e5; display: block; margin-bottom: 4px;
+}
+.depth-slider-labels {
+  display: flex; justify-content: space-between; font-size: 10px; color: #aaa;
+}
+.depth-active-label { color: #4f46e5; font-weight: 700; }
 
 /* Chat */
 .messages {
