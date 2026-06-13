@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Template Builder</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app">
+
+    <div class="panel chat-panel">
+      <div class="panel-header">AI Assistant</div>
+      <div class="messages" id="messages"></div>
+      <div class="chat-input">
+        <textarea id="input" placeholder="Type your response…" rows="2"></textarea>
+        <button id="send-btn" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+
+    <div class="panel template-panel">
+      <div class="panel-header">
+        <span>Live Template</span>
+        <button class="export-btn" onclick="exportTemplate()">Export Template</button>
+      </div>
+      <div id="template-sections"></div>
+    </div>
+
+  </div>
+
+  <div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()"></div>
+  <div class="modal hidden" id="export-modal">
+    <div class="modal-header">
+      <h2>Exported Template</h2>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <pre id="template-output"></pre>
+    <button class="download-btn" onclick="downloadTemplate()">Download .txt</button>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
