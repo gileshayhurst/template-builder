@@ -246,18 +246,41 @@ function renderTemplate() {
   container.appendChild(renderExpansion());
 }
 
-function sectionBlock(id, title, bodyEl) {
+function toggleSection(key) {
+  if (state.collapsedSections.has(key)) {
+    state.collapsedSections.delete(key);
+  } else {
+    state.collapsedSections.add(key);
+  }
+  renderTemplate();
+}
+
+function sectionBlock(id, title, bodyEl, collapseKey) {
   const block = document.createElement("div");
   block.className = "section-block";
   block.id = id;
+
   const header = document.createElement("div");
   header.className = "section-title";
-  header.textContent = title;
+
+  if (collapseKey) {
+    const collapsed = state.collapsedSections.has(collapseKey);
+    header.innerHTML = `<span class="section-chevron">${collapsed ? "▸" : "▾"}</span><span>${escHtml(title)}</span>`;
+    header.style.cursor = "pointer";
+    header.onclick = () => toggleSection(collapseKey);
+  } else {
+    header.textContent = title;
+  }
+
   block.appendChild(header);
-  const body = document.createElement("div");
-  body.className = "section-body";
-  body.appendChild(bodyEl);
-  block.appendChild(body);
+
+  if (!collapseKey || !state.collapsedSections.has(collapseKey)) {
+    const body = document.createElement("div");
+    body.className = "section-body";
+    body.appendChild(bodyEl);
+    block.appendChild(body);
+  }
+
   return block;
 }
 
@@ -284,7 +307,7 @@ function renderMetadata() {
       <input value="${escHtml(s.date)}"
         oninput="state.sections.metadata.date = this.value">
     </label>`;
-  return sectionBlock("section-metadata", "Metadata", body);
+  return sectionBlock("section-metadata", "Metadata", body, "metadata");
 }
 
 function renderPacing() {
@@ -298,14 +321,14 @@ function renderPacing() {
       <button class="reset-link" onclick="resetPacing('${key}')">Reset to default</button>`;
     body.appendChild(rule);
   }
-  return sectionBlock("section-pacing", "Pacing Instructions", body);
+  return sectionBlock("section-pacing", "Pacing Instructions", body, "pacing");
 }
 
 function renderFocus() {
   const body = document.createElement("div");
   body.innerHTML = `<textarea class="focus-textarea" placeholder="Interview focus anchor statement…"
     oninput="state.sections.focus = this.value">${escHtml(state.sections.focus)}</textarea>`;
-  return sectionBlock("section-focus", "Interview Focus", body);
+  return sectionBlock("section-focus", "Interview Focus", body, "focus");
 }
 
 function renderTopics() {
@@ -316,7 +339,7 @@ function renderTopics() {
   addBtn.textContent = "+ Add Topic";
   addBtn.onclick = addTopicManually;
   body.appendChild(addBtn);
-  return sectionBlock("section-topics", `Topics (${state.sections.topics.length})`, body);
+  return sectionBlock("section-topics", `Topics (${state.sections.topics.length})`, body, "topics");
 }
 
 function renderTopicBlock(topic) {
@@ -372,7 +395,7 @@ function renderExpansion() {
     <textarea class="expansion-textarea" rows="5"
       placeholder="role of family and culture&#10;role of media or inspiration sources&#10;…"
       oninput="state.sections.expansion = this.value.split('\\n').map(s=>s.trim()).filter(Boolean)">${escHtml(joined)}</textarea>`;
-  return sectionBlock("section-expansion", "Expansion Topics", body);
+  return sectionBlock("section-expansion", "Expansion Topics", body, "expansion");
 }
 
 // ─── EDITING HELPERS ──────────────────────────────────────────────────────────
