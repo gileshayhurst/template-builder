@@ -64,6 +64,7 @@ body {
 .section-block {
   border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;
   transition: border-color 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
 }
 .section-block.flash {
   border-color: #f59e0b;
