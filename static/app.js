@@ -79,6 +79,59 @@ function applyDepthPreset(value) {
   renderTemplate();
 }
 
+function estimateDuration() {
+  const topics = state.sections.topics;
+  if (topics.length === 0) return 2;
+
+  let raw = 5 * topics.length;
+  for (const t of topics) {
+    raw += Math.max(0, t.core.length - 1) * 1.0;
+    raw += t.probe.length * 0.5;
+  }
+
+  // finish line always adds buffer
+  raw += 5;
+
+  // expansion topics
+  raw += state.sections.expansion.length * 0.75;
+
+  // focus warmup
+  if (state.sections.focus) raw += 2;
+
+  // depth factor: 0.80 at Breadth (0), 1.20 at Deep (100), 1.0 at Balanced (50)
+  const depthFactor = 0.80 + (state.depthSliderValue / 100) * 0.40;
+  raw *= depthFactor;
+
+  return Math.round(Math.min(90, Math.max(2, raw)));
+}
+
+function setDurationTarget(value) {
+  state.durationTarget = Math.min(90, Math.max(0, value || 0));
+  const slider = document.querySelector(".duration-slider");
+  const number = document.querySelector(".duration-number");
+  if (slider) slider.value = state.durationTarget;
+  if (number) number.value = state.durationTarget || "";
+  updateDurationDisplay();
+}
+
+function updateDurationDisplay() {
+  const estimate = estimateDuration();
+  const targetPct = state.durationTarget > 0 ? (state.durationTarget / 90) * 100 : 0;
+  const estimatePct = (estimate / 90) * 100;
+
+  const targetFill = document.querySelector(".target-fill");
+  const estimateFill = document.querySelector(".estimate-fill");
+  const targetLabelEl = document.querySelector(".duration-label-target");
+  const estimateLabelEl = document.querySelector(".duration-label-estimate");
+
+  if (targetFill) targetFill.style.width = targetPct.toFixed(1) + "%";
+  if (estimateFill) estimateFill.style.width = estimatePct.toFixed(1) + "%";
+  if (targetLabelEl) targetLabelEl.textContent = state.durationTarget > 0
+    ? `● Target: ${state.durationTarget} min`
+    : "● No target set";
+  if (estimateLabelEl) estimateLabelEl.textContent = `● Est: ${estimate} min`;
+}
+
 // ─── STATE ────────────────────────────────────────────────────────────────────
 
 const state = {
@@ -238,6 +291,7 @@ function applyUpdate(update) {
   }
 
   renderTemplate();
+  updateDurationDisplay();
 }
 
 function flashSection(id) {
@@ -256,6 +310,11 @@ function renderSettingsStrip() {
 
   const depthLabels = { 0: "Breadth", 25: "Slightly Broad", 50: "Balanced", 75: "Slightly Deep", 100: "Deep" };
   const depthLabel = depthLabels[state.depthSliderValue] || "Balanced";
+
+  const estimate = estimateDuration();
+  const targetPct = state.durationTarget > 0 ? (state.durationTarget / 90) * 100 : 0;
+  const estimatePct = (estimate / 90) * 100;
+  const targetLabelText = state.durationTarget > 0 ? `● Target: ${state.durationTarget} min` : "● No target set";
 
   strip.innerHTML = `
     <div class="settings-strip-header" onclick="toggleSection('settings')">
@@ -277,7 +336,28 @@ function renderSettingsStrip() {
       </div>
       <div class="settings-control" id="duration-control">
         <div class="settings-control-label">Interview Duration</div>
-        <p style="font-size:11px;color:#aaa;margin-top:4px;">Coming soon</p>
+        <div class="duration-labels">
+          <span class="duration-label-target">${escHtml(targetLabelText)}</span>
+          <span class="duration-label-estimate">● Est: ${estimate} min</span>
+        </div>
+        <div class="duration-tracks">
+          <div class="duration-track">
+            <div class="target-fill" style="width:${targetPct.toFixed(1)}%"></div>
+          </div>
+          <div class="duration-track">
+            <div class="estimate-fill" style="width:${estimatePct.toFixed(1)}%"></div>
+          </div>
+        </div>
+        <div class="duration-inputs">
+          <input type="range" class="duration-slider" min="0" max="90" step="5"
+            value="${state.durationTarget}"
+            oninput="setDurationTarget(parseInt(this.value))">
+          <input type="number" class="duration-number" min="0" max="90"
+            value="${state.durationTarget || ""}"
+            placeholder="—"
+            oninput="setDurationTarget(parseInt(this.value) || 0)">
+          <span class="duration-unit">min</span>
+        </div>
       </div>
     </div>
     `}
