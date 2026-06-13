@@ -236,7 +236,21 @@ function flashSection(id) {
 
 // ─── TEMPLATE RENDERING ───────────────────────────────────────────────────────
 
+function renderSettingsStrip() {
+  const strip = document.getElementById("settings-strip");
+  if (!strip) return;
+  const collapsed = state.collapsedSections.has("settings");
+  strip.innerHTML = `
+    <div class="settings-strip-header" onclick="toggleSection('settings')">
+      <span class="section-chevron">${collapsed ? "▸" : "▾"}</span>
+      <span>Settings</span>
+    </div>
+    ${collapsed ? "" : `<div class="settings-strip-body"></div>`}
+  `;
+}
+
 function renderTemplate() {
+  renderSettingsStrip();
   const container = document.getElementById("template-sections");
   container.innerHTML = "";
   container.appendChild(renderMetadata());

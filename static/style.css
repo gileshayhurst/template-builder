@@ -21,6 +21,29 @@ body {
   letter-spacing: 0.05em; color: #666; flex-shrink: 0;
 }
 
+#settings-strip {
+  flex-shrink: 0;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+.settings-strip-header {
+  display: flex; align-items: center; gap: 4px;
+  padding: 6px 16px; cursor: pointer; user-select: none;
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.05em; color: #888;
+}
+.settings-strip-header:hover { color: #444; }
+.settings-strip-body {
+  display: flex; gap: 20px;
+  padding: 10px 16px 14px;
+  border-top: 1px solid #e0e0e0;
+}
+.settings-control { flex: 1; min-width: 0; }
+.settings-control-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #888; margin-bottom: 6px;
+}
+
 /* Chat */
 .messages {
   flex: 1; overflow-y: auto; padding: 16px;
