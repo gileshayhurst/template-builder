@@ -91,7 +91,7 @@ def test_chat_emits_section_update_on_tool_call(client):
         id = "tu_abc"
         name = "update_focus"
         input = {"text": "Anchor on cooking."}
-        def model_dump(self):
+        def model_dump(self, **kwargs):
             return {"type": "tool_use", "id": self.id, "name": self.name, "input": self.input}
 
     with patch("app.client") as mock_client:

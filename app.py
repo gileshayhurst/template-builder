@@ -126,7 +126,7 @@ def stream_conversation(new_message):
 
         conversation_history.append({
             "role": "assistant",
-            "content": [b.model_dump() for b in final.content]
+            "content": [b.model_dump(exclude_none=True) for b in final.content]
         })
 
         if final.stop_reason == "tool_use":
