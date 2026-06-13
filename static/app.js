@@ -72,6 +72,8 @@ function getDepthPreset(value) {
 }
 
 function applyDepthPreset(value) {
+  const valid = [0, 25, 50, 75, 100];
+  value = valid.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
   state.depthSliderValue = value;
   state.sections.pacing = { ...getDepthPreset(value) };
   renderTemplate();
