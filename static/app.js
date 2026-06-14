@@ -171,6 +171,7 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 async function startConversation() {
+  await fetch("/reset", { method: "POST" });
   await streamFromServer("Hello, I am ready to create a template.");
 }
 
@@ -265,6 +266,8 @@ async function streamFromServer(message) {
         }
       }
     }
+  } catch (err) {
+    appendMessage("ai", `⚠ Could not reach AI: ${err.message}`);
   } finally {
     state.streaming = false;
     document.getElementById("send-btn").disabled = false;
