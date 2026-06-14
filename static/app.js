@@ -261,6 +261,8 @@ async function streamFromServer(message) {
             applyUpdate(JSON.parse(raw));
           } else if (currentEvent === "done") {
             if (statusEl) { statusEl.remove(); statusEl = null; }
+          } else if (currentEvent === "error") {
+            throw new Error(JSON.parse(raw));
           }
           currentEvent = null;
         }

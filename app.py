@@ -155,7 +155,14 @@ def index():
 @app.route("/chat", methods=["POST"])
 def chat():
     message = request.json["message"]
-    return Response(stream_conversation(message), mimetype="text/event-stream")
+    def safe_stream():
+        try:
+            yield from stream_conversation(message)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            yield f"event: error\ndata: {json.dumps(type(e).__name__ + ': ' + str(e))}\n\n"
+    return Response(safe_stream(), mimetype="text/event-stream")
 
 
 @app.route("/export", methods=["POST"])
