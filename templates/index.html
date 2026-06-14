@@ -12,8 +12,15 @@
       <div class="panel-header">AI Assistant</div>
       <div class="messages" id="messages"></div>
       <div class="chat-input">
-        <textarea id="input" placeholder="Type your response…" rows="2"></textarea>
-        <button id="send-btn" onclick="sendMessage()">Send</button>
+        <div class="quick-actions-row">
+          <button class="quick-action-btn" onclick="sendQuickAction('Can you suggest another topic we haven\'t covered yet?')">+ Suggest a topic</button>
+          <button class="quick-action-btn" onclick="sendQuickAction('Can you review the pacing instructions and tighten them up — make them more concise and actionable?')">⚡ Tighten pacing</button>
+          <button class="quick-action-btn" onclick="sendQuickAction('Can you suggest some additional expansion topics based on what we\'ve built so far?')">↗ Add expansion ideas</button>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <textarea id="input" placeholder="Type your response…" rows="2"></textarea>
+          <button id="send-btn" onclick="sendMessage()">Send</button>
+        </div>
       </div>
     </div>
 

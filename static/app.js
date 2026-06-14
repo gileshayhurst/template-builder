@@ -208,9 +208,16 @@ async function sendMessage() {
   await streamFromServer(text);
 }
 
+function sendQuickAction(message) {
+  if (state.streaming) return;
+  appendMessage("user", message);
+  streamFromServer(message);
+}
+
 async function streamFromServer(message) {
   state.streaming = true;
   document.getElementById("send-btn").disabled = true;
+  document.querySelectorAll(".quick-action-btn").forEach(b => b.disabled = true);
 
   let aiBodyEl = null;
   let aiText = "";
@@ -261,6 +268,7 @@ async function streamFromServer(message) {
   } finally {
     state.streaming = false;
     document.getElementById("send-btn").disabled = false;
+    document.querySelectorAll(".quick-action-btn").forEach(b => b.disabled = false);
   }
 }
 
