@@ -145,7 +145,7 @@ const state = {
   exportFilename: "",
   depthSliderValue: 50,
   durationTarget: 0,
-  collapsedSections: new Set(["settings"]),
+  collapsedSections: new Set(),
   sections: {
     metadata: { title: "", version: "1.0", date: new Date().toISOString().split("T")[0] },
     pacing: { ...PACING_DEFAULTS },
