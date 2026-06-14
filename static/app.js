@@ -208,10 +208,10 @@ async function sendMessage() {
   await streamFromServer(text);
 }
 
-function sendQuickAction(message) {
+async function sendQuickAction(message) {
   if (state.streaming) return;
   appendMessage("user", message);
-  streamFromServer(message);
+  await streamFromServer(message);
 }
 
 async function streamFromServer(message) {

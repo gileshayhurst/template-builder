@@ -100,7 +100,7 @@ body {
   display: flex; flex-direction: column;
   border-top: 1px solid #e0e0e0; flex-shrink: 0; padding: 0;
 }
-.chat-input > div:last-child { display: flex; gap: 8px; padding: 8px 14px 12px; }
+.chat-input-row { display: flex; gap: 8px; padding: 8px 14px 12px; }
 .chat-input textarea {
   flex: 1; border: 1px solid #ddd; border-radius: 6px;
   padding: 8px 10px; font-size: 13px; font-family: inherit; resize: none; outline: none;
@@ -127,7 +127,8 @@ body {
   padding: 4px 10px; cursor: pointer;
 }
 .quick-action-btn:hover { background: #eef2ff; border-color: #4f46e5; }
-.quick-action-btn:disabled { color: #aaa; border-color: #ddd; cursor: not-allowed; background: white; }
+.quick-action-btn:focus { outline: 2px solid #4f46e5; outline-offset: 2px; }
+.quick-action-btn:disabled { color: #aaa; border-color: #ddd; cursor: not-allowed; }
 .export-btn { font-size: 11px; padding: 6px 12px; }
 
 /* Template panel */
