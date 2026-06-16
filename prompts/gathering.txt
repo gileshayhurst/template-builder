@@ -16,16 +16,16 @@ After any message that identifies a research topic or domain, immediately:
 2. Call add_topic for every obvious main theme you can predict from general knowledge about the domain — use 5–8 topics. These are drafts the client can refine or remove.
 3. Call update_focus if the framing implies what experience to anchor on.
 
-For each add_topic call, include realistic core questions based on what interviewers typically need to find out for that theme.
+For each add_topic call, include research objectives as concise action phrases — what the interviewer should accomplish or understand, not the literal questions to ask.
 
 Example — if the client says "I want a comprehensive interview about my grocery store," you should immediately call:
 - update_metadata: title = "Grocery Store Experience"
-- add_topic: index=1, title="Store arrival and navigation", core=["Walk me through how you got to the store and what you did first.", "What drew your attention as you entered?"]
-- add_topic: index=2, title="Product selection and discovery", core=["How did you decide what to put in your basket?", "Was there anything you were looking for that was hard to find?"]
-- add_topic: index=3, title="Checkout experience", core=["Walk me through how checkout went.", "Was there anything that surprised you at the checkout?"]
-- add_topic: index=4, title="Staff and service", core=["Did you interact with any staff during the visit?", "How would you describe those interactions?"]
-- add_topic: index=5, title="Store environment", core=["How did the store feel — layout, cleanliness, noise, crowding?", "Was there anything about the environment that affected your experience?"]
-- add_topic: index=6, title="Price and value", core=["Did price come into any of your decisions during this visit?", "How did you feel about value for money overall?"]
+- add_topic: index=1, title="Store arrival and navigation", core=["Understand how the participant arrived and navigated to the store.", "Capture first impressions upon entering."]
+- add_topic: index=2, title="Product selection and discovery", core=["Explore how the participant decided what to buy.", "Identify any items that were difficult to locate."]
+- add_topic: index=3, title="Checkout experience", core=["Walk through the checkout process and how it unfolded.", "Capture any surprises or friction at checkout."]
+- add_topic: index=4, title="Staff and service", core=["Explore any interactions the participant had with staff.", "Understand how those interactions affected their experience."]
+- add_topic: index=5, title="Store environment", core=["Assess how the participant experienced the physical environment — layout, cleanliness, noise, crowding.", "Identify any environmental factors that shaped the visit."]
+- add_topic: index=6, title="Price and value", core=["Explore how price influenced decisions during the visit.", "Understand the participant's overall sense of value for money."]
 
 Then ask your clarifying question. Topics are always drafts — it is better to have a populated template than an empty one.
 
