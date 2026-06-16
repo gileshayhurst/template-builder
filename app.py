@@ -60,8 +60,44 @@ GATHERING_TOOLS = [
             "properties": {
                 "index": {"type": "integer", "description": "1-based topic number"},
                 "title": {"type": "string"},
-                "core": {"type": "array", "items": {"type": "string"}},
-                "probe": {"type": "array", "items": {"type": "string"}}
+                "priority": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5,
+                    "description": "Overall topic importance 1–5. Default 3 if unsure."
+                },
+                "core": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "text": {"type": "string"},
+                            "priority": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 5,
+                                "description": "Item importance 1–5. Default 3 if unsure."
+                            }
+                        },
+                        "required": ["text"]
+                    }
+                },
+                "probe": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "text": {"type": "string"},
+                            "priority": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 5,
+                                "description": "Item importance 1–5. Default 3 if unsure."
+                            }
+                        },
+                        "required": ["text"]
+                    }
+                }
             },
             "required": ["index", "title", "core"]
         }
