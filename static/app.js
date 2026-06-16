@@ -79,6 +79,10 @@ function applyDepthPreset(value) {
   renderTemplate();
 }
 
+function priorityFactor(p) {
+  return 0.5 + ((p ?? 3) - 1) * 0.25;
+}
+
 function estimateDuration() {
   const topics = state.sections.topics;
   if (topics.length === 0) return 2;
@@ -277,6 +281,11 @@ async function streamFromServer(message) {
 
 // ─── SECTION UPDATES ──────────────────────────────────────────────────────────
 
+function normaliseItem(item) {
+  if (typeof item === "string") return { text: item, priority: 3 };
+  return { text: item.text, priority: item.priority ?? 3 };
+}
+
 function applyUpdate(update) {
   const { section, payload } = update;
 
@@ -376,6 +385,32 @@ function renderSettingsStrip() {
     </div>
     `}
   `;
+}
+
+function renderStarWidget(currentPriority, onClickFn) {
+  const widget = document.createElement("div");
+  widget.className = "star-widget";
+  widget.onclick = e => e.stopPropagation();
+
+  function paint(hoverVal) {
+    const fill = hoverVal ?? currentPriority;
+    Array.from(widget.children).forEach((s, i) => {
+      s.className = "star" + (i < fill ? " filled" : "");
+    });
+  }
+
+  for (let i = 1; i <= 5; i++) {
+    const s = document.createElement("span");
+    s.className = "star" + (i <= currentPriority ? " filled" : "");
+    s.textContent = "★";
+    s.onmouseenter = () => paint(i);
+    s.onmouseleave = () => paint(null);
+    s.onclick = () => { currentPriority = i; paint(null); onClickFn(i); };
+    widget.appendChild(s);
+  }
+
+  widget.onmouseleave = () => paint(null);
+  return widget;
 }
 
 function renderTemplate() {
@@ -592,6 +627,16 @@ function updateTopicField(index, field, value) {
 function updateItem(topicIndex, type, itemIndex, value) {
   const topic = state.sections.topics.find(t => t.index === topicIndex);
   if (topic) topic[type][itemIndex] = value;
+}
+
+function updateItemText(topicIndex, type, itemIndex, value) {
+  const topic = state.sections.topics.find(t => t.index === topicIndex);
+  if (topic) topic[type][itemIndex].text = value;
+}
+
+function updateItemPriority(topicIndex, type, itemIndex, value) {
+  const topic = state.sections.topics.find(t => t.index === topicIndex);
+  if (topic) topic[type][itemIndex].priority = value;
 }
 
 function addItem(topicIndex, type) {
