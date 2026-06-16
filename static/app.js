@@ -83,23 +83,21 @@ function estimateDuration() {
   const topics = state.sections.topics;
   if (topics.length === 0) return 2;
 
-  let raw = 5 * topics.length;
+  let raw = 0.8 * topics.length;
   for (const t of topics) {
-    raw += Math.max(0, t.core.length - 1) * 1.0;
-    raw += t.probe.length * 0.5;
+    raw += Math.max(0, t.core.length - 1) * 0.2;
+    raw += t.probe.length * 0.1;
   }
 
-  // finish line always adds buffer
-  raw += 5;
+  raw += 0.5; // finish line buffer
+  raw += state.sections.expansion.length * 0.2;
+  if (state.sections.focus) raw += 0.5;
 
-  // expansion topics
-  raw += state.sections.expansion.length * 0.75;
-
-  // focus warmup
-  if (state.sections.focus) raw += 2;
-
-  // depth factor: 0.80 at Breadth (0), 1.20 at Deep (100), 1.0 at Balanced (50)
-  const depthFactor = 0.80 + (state.depthSliderValue / 100) * 0.40;
+  // depth factor: asymmetric — 0.65 at Breadth, 1.0 at Balanced, 1.8 at Deep
+  const v = state.depthSliderValue;
+  const depthFactor = v < 50
+    ? 1.0 - ((50 - v) / 50) * 0.35
+    : 1.0 + ((v - 50) / 50) * 0.8;
   raw *= depthFactor;
 
   return Math.round(Math.min(90, Math.max(2, raw)));
@@ -145,7 +143,7 @@ const state = {
   exportFilename: "",
   depthSliderValue: 50,
   durationTarget: 0,
-  collapsedSections: new Set(),
+  collapsedSections: new Set(["metadata", "pacing"]),
   sections: {
     metadata: { title: "", version: "1.0", date: new Date().toISOString().split("T")[0] },
     pacing: { ...PACING_DEFAULTS },
