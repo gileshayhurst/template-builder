@@ -65,6 +65,9 @@ When processing a `topic` section update, normalise incoming core/probe items th
 ### `updateItem` / `updateItemText`
 `updateItem` currently writes a raw string; rename it to `updateItemText` to make its scope explicit. `updateItemPriority` is a new parallel helper.
 
+### `static/style.css`
+Add styles for `.star-widget`, `.star` (cursor pointer, base grey colour), `.star.filled` (gold), and a hover highlight that fills stars up to the hovered one.
+
 ---
 
 ## Duration Formula (`estimateDuration`)
