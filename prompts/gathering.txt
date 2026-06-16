@@ -20,12 +20,12 @@ For each add_topic call, include research objectives as concise action phrases �
 
 Example — if the client says "I want a comprehensive interview about my grocery store," you should immediately call:
 - update_metadata: title = "Grocery Store Experience"
-- add_topic: index=1, title="Store arrival and navigation", core=["Understand how the participant arrived and navigated to the store.", "Capture first impressions upon entering."]
-- add_topic: index=2, title="Product selection and discovery", core=["Explore how the participant decided what to buy.", "Identify any items that were difficult to locate."]
-- add_topic: index=3, title="Checkout experience", core=["Walk through the checkout process and how it unfolded.", "Capture any surprises or friction at checkout."]
-- add_topic: index=4, title="Staff and service", core=["Explore any interactions the participant had with staff.", "Understand how those interactions affected their experience."]
-- add_topic: index=5, title="Store environment", core=["Assess how the participant experienced the physical environment — layout, cleanliness, noise, crowding.", "Identify any environmental factors that shaped the visit."]
-- add_topic: index=6, title="Price and value", core=["Explore how price influenced decisions during the visit.", "Understand the participant's overall sense of value for money."]
+- add_topic: index=1, title="Store arrival and navigation", priority=4, core=[{"text":"Understand how the participant arrived and navigated to the store.","priority":4},{"text":"Capture first impressions upon entering.","priority":3}]
+- add_topic: index=2, title="Product selection and discovery", priority=5, core=[{"text":"Explore how the participant decided what to buy.","priority":5},{"text":"Identify any items that were difficult to locate.","priority":3}]
+- add_topic: index=3, title="Checkout experience", priority=4, core=[{"text":"Walk through the checkout process and how it unfolded.","priority":4},{"text":"Capture any surprises or friction at checkout.","priority":4}]
+- add_topic: index=4, title="Staff and service", priority=2, core=[{"text":"Explore any interactions the participant had with staff.","priority":2},{"text":"Understand how those interactions affected their experience.","priority":2}]
+- add_topic: index=5, title="Store environment", priority=3, core=[{"text":"Assess how the participant experienced the physical environment — layout, cleanliness, noise, crowding.","priority":3},{"text":"Identify any environmental factors that shaped the visit.","priority":2}]
+- add_topic: index=6, title="Price and value", priority=3, core=[{"text":"Explore how price influenced decisions during the visit.","priority":3},{"text":"Understand the participant's overall sense of value for money.","priority":3}]
 
 Then ask your clarifying question. Topics are always drafts — it is better to have a populated template than an empty one.
 
