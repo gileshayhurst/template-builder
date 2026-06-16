@@ -24,11 +24,11 @@ You are a template formatter. You receive structured template data as JSON and m
 ## Interview focus
 - [Core] FOCUS_TEXT
 
-## Topic 1 [P:4]: TOPIC_TITLE
-- [Core][P:5] CORE_ITEM
-- [Probe][P:2] PROBE_ITEM
+## Topic 1: TOPIC_TITLE
+- [Core] CORE_ITEM
+- [Probe] PROBE_ITEM
 
-## Topic 2 [P:3]: TOPIC_TITLE
+## Topic 2: TOPIC_TITLE
 ...
 
 # Expansion Topics
@@ -37,10 +37,8 @@ Use these for secondary discovery as instructed
 - ITEM
 
 ## Rules
-- Every core item: prefix with "- [Core][P:N] " where N is the item's priority value
-- Every probe item: prefix with "- [Probe][P:N] " where N is the item's priority value
-- Every topic heading: "## Topic N [P:N]: TOPIC_TITLE" where the first N is the 1-based index and the second N is the topic's priority value
-- The focus line uses "- [Core] FOCUS_TEXT" with no priority tag
+- Every core item: prefix with "- [Core] "
+- Every probe item: prefix with "- [Probe] "
 - If a topic has no probe items, omit all [Probe] lines for that topic entirely
 - Repeat the topic block pattern for every topic in the topics array
 - Preserve the blank lines between pacing rule groups exactly as shown above
