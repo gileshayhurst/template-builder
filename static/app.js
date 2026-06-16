@@ -304,7 +304,13 @@ function applyUpdate(update) {
     state.sections.focus = payload;
     flashSection("section-focus");
   } else if (section === "topic") {
-    const topic = { ...payload, index: parseInt(payload.index, 10) };
+    const raw = { ...payload, index: parseInt(payload.index, 10) };
+    const topic = {
+      ...raw,
+      priority: raw.priority ?? 3,
+      core: (raw.core || []).map(normaliseItem),
+      probe: (raw.probe || []).map(normaliseItem)
+    };
     const idx = state.sections.topics.findIndex(t => t.index === topic.index);
     if (idx >= 0) state.sections.topics[idx] = topic;
     else {
@@ -643,7 +649,7 @@ function addTopicManually() {
   const nextIndex = state.sections.topics.length
     ? Math.max(...state.sections.topics.map(t => t.index)) + 1
     : 1;
-  state.sections.topics.push({ index: nextIndex, title: "", core: [""], probe: [] });
+  state.sections.topics.push({ index: nextIndex, title: "", priority: 3, core: [{ text: "", priority: 3 }], probe: [] });
   renderTemplate();
 }
 
@@ -670,7 +676,7 @@ function updateItemPriority(topicIndex, type, itemIndex, value) {
 
 function addItem(topicIndex, type) {
   const topic = state.sections.topics.find(t => t.index === topicIndex);
-  if (topic) { topic[type].push(""); renderTemplate(); }
+  if (topic) { topic[type].push({ text: "", priority: 3 }); renderTemplate(); }
 }
 
 // ─── EXPORT ───────────────────────────────────────────────────────────────────
