@@ -548,13 +548,31 @@ function renderTopicBlock(topic) {
 
   const topicHeader = document.createElement("div");
   topicHeader.className = "topic-block-header";
-  topicHeader.innerHTML = `
-    <span class="section-chevron">${collapsed ? "▸" : "▾"}</span>
-    <input value="${escHtml(topic.title)}" placeholder="Topic title…"
-      oninput="updateTopicField(${topic.index}, 'title', this.value)"
-      onclick="event.stopPropagation()">
-    <button class="remove-topic-btn" onclick="event.stopPropagation(); removeTopicManually(${topic.index})">×</button>`;
   topicHeader.onclick = () => toggleSection(topicKey);
+
+  const chevron = document.createElement("span");
+  chevron.className = "section-chevron";
+  chevron.textContent = collapsed ? "▸" : "▾";
+  topicHeader.appendChild(chevron);
+
+  const titleInput = document.createElement("input");
+  titleInput.value = topic.title;
+  titleInput.placeholder = "Topic title…";
+  titleInput.oninput = function () { updateTopicField(topic.index, "title", this.value); };
+  titleInput.onclick = e => e.stopPropagation();
+  topicHeader.appendChild(titleInput);
+
+  topicHeader.appendChild(renderStarWidget(topic.priority ?? 3, n => {
+    updateTopicField(topic.index, "priority", n);
+    renderTemplate();
+  }));
+
+  const removeBtn = document.createElement("button");
+  removeBtn.className = "remove-topic-btn";
+  removeBtn.textContent = "×";
+  removeBtn.onclick = e => { e.stopPropagation(); removeTopicManually(topic.index); };
+  topicHeader.appendChild(removeBtn);
+
   block.appendChild(topicHeader);
 
   if (!collapsed) {
@@ -563,8 +581,8 @@ function renderTopicBlock(topic) {
 
     const list = document.createElement("div");
     list.className = "items-list";
-    topic.core.forEach((text, i) => list.appendChild(renderItemRow("core", topic.index, i, text)));
-    topic.probe.forEach((text, i) => list.appendChild(renderItemRow("probe", topic.index, i, text)));
+    topic.core.forEach((item, i) => list.appendChild(renderItemRow("core", topic.index, i, item)));
+    topic.probe.forEach((item, i) => list.appendChild(renderItemRow("probe", topic.index, i, item)));
     body.appendChild(list);
 
     const btnRow = document.createElement("div");
@@ -584,12 +602,22 @@ function renderTopicBlock(topic) {
   return block;
 }
 
-function renderItemRow(type, topicIndex, itemIndex, text) {
+function renderItemRow(type, topicIndex, itemIndex, item) {
   const row = document.createElement("div");
   row.className = "item-row";
-  row.innerHTML = `
-    <span class="item-badge ${type}">${type === "core" ? "Core" : "Probe"}</span>
-    <textarea oninput="updateItem(${topicIndex}, '${type}', ${itemIndex}, this.value)">${escHtml(text)}</textarea>`;
+
+  const badge = document.createElement("span");
+  badge.className = `item-badge ${type}`;
+  badge.textContent = type === "core" ? "Core" : "Probe";
+  row.appendChild(badge);
+
+  row.appendChild(renderStarWidget(item.priority ?? 3, n => updateItemPriority(topicIndex, type, itemIndex, n)));
+
+  const textarea = document.createElement("textarea");
+  textarea.value = item.text;
+  textarea.oninput = function () { updateItemText(topicIndex, type, itemIndex, this.value); };
+  row.appendChild(textarea);
+
   return row;
 }
 
@@ -629,10 +657,6 @@ function updateTopicField(index, field, value) {
   if (topic) topic[field] = value;
 }
 
-function updateItem(topicIndex, type, itemIndex, value) {
-  const topic = state.sections.topics.find(t => t.index === topicIndex);
-  if (topic) topic[type][itemIndex] = value;
-}
 
 function updateItemText(topicIndex, type, itemIndex, value) {
   const topic = state.sections.topics.find(t => t.index === topicIndex);
