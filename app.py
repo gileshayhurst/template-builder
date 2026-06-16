@@ -87,6 +87,12 @@ GATHERING_TOOLS = [
 ]
 
 
+def _normalise_item(item):
+    if isinstance(item, str):
+        return {"text": item, "priority": 3}
+    return {"text": item["text"], "priority": item.get("priority", 3)}
+
+
 def process_tool_call(name, input_data):
     if name == "update_metadata":
         return {"section": "metadata", "payload": {"title": input_data["title"]}}
@@ -98,8 +104,9 @@ def process_tool_call(name, input_data):
         return {"section": "topic", "payload": {
             "index": input_data["index"],
             "title": input_data["title"],
-            "core": input_data["core"],
-            "probe": input_data.get("probe", [])
+            "priority": input_data.get("priority", 3),
+            "core": [_normalise_item(i) for i in input_data["core"]],
+            "probe": [_normalise_item(i) for i in input_data.get("probe", [])]
         }}
     elif name == "remove_topic":
         return {"section": "remove_topic", "payload": {"index": input_data["index"]}}
