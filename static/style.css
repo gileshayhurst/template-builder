@@ -259,3 +259,24 @@ body {
   background: #059669; color: #fff; border: none; border-radius: 6px;
   padding: 10px 20px; font-size: 13px; cursor: pointer; align-self: flex-start; font-family: inherit;
 }
+
+/* Star priority widget */
+.star-widget {
+  display: inline-flex;
+  gap: 1px;
+  line-height: 1;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.star {
+  font-size: 13px;
+  color: #d1d5db;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.08s;
+}
+
+.star.filled {
+  color: #f59e0b;
+}
