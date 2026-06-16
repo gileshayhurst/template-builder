@@ -25,21 +25,58 @@ def test_update_focus():
 
 def test_add_topic_with_probe():
     result = process_tool_call("add_topic", {
-        "index": 1, "title": "Confirm the occasion",
-        "core": ["Identify the dish"], "probe": ["Clarify if ambiguous"]
+        "index": 1,
+        "title": "Confirm the occasion",
+        "priority": 5,
+        "core": [{"text": "Identify the dish", "priority": 5}],
+        "probe": [{"text": "Clarify if ambiguous", "priority": 2}]
     })
     assert result == {
         "section": "topic",
-        "payload": {"index": 1, "title": "Confirm the occasion",
-                    "core": ["Identify the dish"], "probe": ["Clarify if ambiguous"]}
+        "payload": {
+            "index": 1,
+            "title": "Confirm the occasion",
+            "priority": 5,
+            "core": [{"text": "Identify the dish", "priority": 5}],
+            "probe": [{"text": "Clarify if ambiguous", "priority": 2}]
+        }
     }
 
 
 def test_add_topic_probe_defaults_to_empty():
     result = process_tool_call("add_topic", {
-        "index": 2, "title": "Basic facts", "core": ["Collect dish name"]
+        "index": 2, "title": "Basic facts",
+        "core": [{"text": "Collect dish name", "priority": 3}]
     })
     assert result["payload"]["probe"] == []
+
+
+def test_add_topic_priority_defaults_to_3():
+    result = process_tool_call("add_topic", {
+        "index": 3, "title": "No priority given",
+        "core": [{"text": "Some item", "priority": 3}]
+    })
+    assert result["payload"]["priority"] == 3
+
+
+def test_add_topic_string_items_normalised():
+    result = process_tool_call("add_topic", {
+        "index": 4, "title": "Legacy call",
+        "priority": 4,
+        "core": ["Plain string item"],
+        "probe": ["Another plain string"]
+    })
+    assert result["payload"]["core"] == [{"text": "Plain string item", "priority": 3}]
+    assert result["payload"]["probe"] == [{"text": "Another plain string", "priority": 3}]
+
+
+def test_add_topic_item_priority_defaults_to_3():
+    result = process_tool_call("add_topic", {
+        "index": 5, "title": "Item missing priority",
+        "priority": 3,
+        "core": [{"text": "No priority on this item"}]
+    })
+    assert result["payload"]["core"] == [{"text": "No priority on this item", "priority": 3}]
 
 
 def test_remove_topic():
