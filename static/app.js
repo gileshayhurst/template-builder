@@ -87,17 +87,22 @@ function estimateDuration() {
   const topics = state.sections.topics;
   if (topics.length === 0) return 2;
 
-  let raw = 0.8 * topics.length;
+  let raw = 0;
   for (const t of topics) {
-    raw += Math.max(0, t.core.length - 1) * 0.2;
-    raw += t.probe.length * 0.1;
+    const tFactor = priorityFactor(t.priority ?? 3);
+    raw += 0.8 * tFactor;
+    for (let i = 1; i < t.core.length; i++) {
+      raw += 0.2 * priorityFactor(t.core[i].priority ?? 3);
+    }
+    for (const p of t.probe) {
+      raw += 0.1 * priorityFactor(p.priority ?? 3);
+    }
   }
 
-  raw += 0.5; // finish line buffer
+  raw += 0.5;
   raw += state.sections.expansion.length * 0.2;
   if (state.sections.focus) raw += 0.5;
 
-  // depth factor: asymmetric — 0.65 at Breadth, 1.0 at Balanced, 1.8 at Deep
   const v = state.depthSliderValue;
   const depthFactor = v < 50
     ? 1.0 - ((50 - v) / 50) * 0.35
