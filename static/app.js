@@ -79,37 +79,8 @@ function applyDepthPreset(value) {
   renderTemplate();
 }
 
-function priorityFactor(p) {
-  return 0.5 + ((p ?? 3) - 1) * 0.25;
-}
-
 function estimateDuration() {
-  const topics = state.sections.topics;
-  if (topics.length === 0) return 2;
-
-  let raw = 0;
-  for (const t of topics) {
-    const tFactor = priorityFactor(t.priority ?? 3);
-    raw += 0.8 * tFactor;
-    for (let i = 1; i < t.core.length; i++) {
-      raw += 0.2 * priorityFactor(t.core[i].priority ?? 3);
-    }
-    for (const p of t.probe) {
-      raw += 0.1 * priorityFactor(p.priority ?? 3);
-    }
-  }
-
-  raw += 0.5;
-  raw += state.sections.expansion.length * 0.2;
-  if (state.sections.focus) raw += 0.5;
-
-  const v = state.depthSliderValue;
-  const depthFactor = v < 50
-    ? 1.0 - ((50 - v) / 50) * 0.35
-    : 1.0 + ((v - 50) / 50) * 0.8;
-  raw *= depthFactor;
-
-  return Math.round(Math.min(90, Math.max(2, raw)));
+  return DurationEngine.estimateDurationFor(state.sections, state.depthSliderValue);
 }
 
 function durationViewModel() {
