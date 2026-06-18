@@ -83,6 +83,15 @@
     return estimateDurationFor(r.sections, depthValue) - baseEst;
   }
 
+  function topicMinutes(topic, depthValue) {
+    const core  = topic.core  || [];
+    const probe = topic.probe || [];
+    let raw = 0.8 * priorityFactor(topic.priority);
+    for (let i = 1; i < core.length; i++) raw += 0.2 * priorityFactor(core[i].priority);
+    for (const p of probe) raw += 0.1 * priorityFactor(p.priority);
+    return Math.max(1, Math.round(raw * depthFactorFor(depthValue)));
+  }
+
   // Returns up to 3 suggestion descriptors, each:
   //   { type, label, detail, deltaMin, ...params consumed by the UI layer }
   // Internal ranking fields on each descriptor:
@@ -165,7 +174,7 @@
     return cands.slice(0, 3);
   }
 
-  const api = { TOLERANCE, priorityFactor, depthFactorFor, estimateRawFor, estimateDurationFor, generateSuggestions, applySuggestion };
+  const api = { TOLERANCE, priorityFactor, depthFactorFor, estimateRawFor, estimateDurationFor, generateSuggestions, applySuggestion, topicMinutes };
   if (typeof window !== 'undefined') window.DurationEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })();

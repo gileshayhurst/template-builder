@@ -103,3 +103,35 @@ test('applySuggestion is pure (does not mutate input)', () => {
   D.applySuggestion(sections, 50, { type: 'remove_topic', topicPos: 0 });
   assert.strictEqual(JSON.stringify(sections), before);
 });
+
+test('topicMinutes: single core at priority 3, depth 50 → 1 min', () => {
+  const topic = { priority: 3, core: [{ priority: 3 }], probe: [] };
+  // raw = 0.8*1.0 = 0.8; depth50 factor = 1.0; round(0.8)=1; max(1,1)=1
+  assert.strictEqual(D.topicMinutes(topic, 50), 1);
+});
+
+test('topicMinutes: min 1 even for priority-1 topic at depth 0', () => {
+  const topic = { priority: 1, core: [{ priority: 1 }], probe: [] };
+  // raw = 0.8*0.5=0.4; depth0 factor=0.65; round(0.26)=0; max(1,0)=1
+  assert.strictEqual(D.topicMinutes(topic, 0), 1);
+});
+
+test('topicMinutes: richer topic at depth 75', () => {
+  const topic = {
+    priority: 4,
+    core: [{ priority: 5 }, { priority: 4 }, { priority: 3 }],
+    probe: [{ priority: 3 }, { priority: 2 }],
+  };
+  // raw = 0.8*1.25 + 0.2*1.25 + 0.2*1.0 + 0.1*1.0 + 0.1*0.75
+  //     = 1.0 + 0.25 + 0.2 + 0.1 + 0.075 = 1.625
+  // depthFactor(75) = 1.0 + (25/50)*0.8 = 1.4
+  // round(1.625*1.4) = round(2.275) = 2
+  assert.strictEqual(D.topicMinutes(topic, 75), 2);
+});
+
+test('topicMinutes changes when depth changes', () => {
+  const topic = { priority: 5, core: [{ priority: 5 }, { priority: 5 }], probe: [{ priority: 5 }] };
+  const shallow = D.topicMinutes(topic, 0);
+  const deep    = D.topicMinutes(topic, 100);
+  assert.ok(deep > shallow, 'deep estimate must exceed shallow');
+});
