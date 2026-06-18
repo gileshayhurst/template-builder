@@ -180,3 +180,32 @@ def test_build_settings_context_invalid_depth_excluded():
     result = build_settings_context({'depthValue': 150, 'depthLabel': 'Bad', 'durationTarget': 0})
     assert 'Depth/breadth slider' not in result
     assert result == ''
+
+
+def test_chat_passes_settings_context_to_anthropic(client):
+    with patch("app.client") as mock_client:
+        mock_client.messages.stream.return_value = make_mock_stream(["Ok"])
+        resp = client.post("/chat",
+            data=json.dumps({
+                "message": "Hello",
+                "settings": {
+                    "depthValue": 50, "depthLabel": "Balanced",
+                    "durationTarget": 30, "estimate": 38
+                }
+            }),
+            content_type="application/json")
+        _ = resp.data
+    call_kwargs = mock_client.messages.stream.call_args.kwargs
+    assert "## Current UI settings" in call_kwargs["system"]
+    assert "Duration target: 30 min" in call_kwargs["system"]
+
+
+def test_chat_without_settings_uses_base_prompt(client):
+    with patch("app.client") as mock_client:
+        mock_client.messages.stream.return_value = make_mock_stream(["Ok"])
+        resp = client.post("/chat",
+            data=json.dumps({"message": "Hello"}),
+            content_type="application/json")
+        _ = resp.data
+    call_kwargs = mock_client.messages.stream.call_args.kwargs
+    assert "## Current UI settings" not in call_kwargs["system"]

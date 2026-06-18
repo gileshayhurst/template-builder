@@ -181,14 +181,16 @@ def process_tool_call(name, input_data):
         raise ValueError(f"Unknown tool: {name}")
 
 
-def stream_conversation(new_message):
+def stream_conversation(new_message, system=None):
+    if system is None:
+        system = GATHERING_PROMPT
     conversation_history.append({"role": "user", "content": new_message})
 
     while True:
         with client.messages.stream(
             model=MODEL,
             max_tokens=4096,
-            system=GATHERING_PROMPT,
+            system=system,
             tools=GATHERING_TOOLS,
             messages=conversation_history
         ) as stream:
@@ -226,10 +228,14 @@ def index():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    message = request.json["message"]
+    data = request.json
+    message = data["message"]
+    settings = data.get("settings", {})
+    settings_context = build_settings_context(settings)
+    system = GATHERING_PROMPT + settings_context
     def safe_stream():
         try:
-            yield from stream_conversation(message)
+            yield from stream_conversation(message, system)
         except Exception as e:
             import traceback
             traceback.print_exc()
