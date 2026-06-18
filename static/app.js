@@ -628,6 +628,26 @@ function renderTopicBlock(topic) {
   grip.addEventListener("pointerdown", () => { block.draggable = true; });
   grip.addEventListener("pointerup",   () => { block.draggable = false; });
   grip.addEventListener("click", e => e.stopPropagation());
+  grip.addEventListener("keydown", (e) => {
+    const topics = state.sections.topics;
+    const pos = topics.findIndex(t => t.index === topic.index);
+    if (e.key === "ArrowUp" && pos > 0) {
+      e.preventDefault();
+      commitReorder(pos, pos - 1);
+      // Restore focus to the grip that is now at pos-1 after re-render
+      setTimeout(() => {
+        const grips = document.querySelectorAll(".topic-grip");
+        if (grips[pos - 1]) grips[pos - 1].focus();
+      }, 0);
+    } else if (e.key === "ArrowDown" && pos < topics.length - 1) {
+      e.preventDefault();
+      commitReorder(pos, pos + 1);
+      setTimeout(() => {
+        const grips = document.querySelectorAll(".topic-grip");
+        if (grips[pos + 1]) grips[pos + 1].focus();
+      }, 0);
+    }
+  });
   topicHeader.appendChild(grip);
 
   const chevron = document.createElement("span");
