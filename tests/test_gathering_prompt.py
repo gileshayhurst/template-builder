@@ -42,3 +42,10 @@ def test_prompt_has_anti_pattern_table():
     text = _prompt_text()
     assert "red flag" in text
     assert "double-barreled" in text
+
+
+def test_prompt_has_settings_awareness():
+    text = _prompt_text()
+    assert "ui settings awareness" in text
+    assert "flag" in text
+    assert "25%" in text
