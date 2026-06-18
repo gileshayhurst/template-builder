@@ -123,6 +123,35 @@ GATHERING_TOOLS = [
 ]
 
 
+def build_settings_context(settings):
+    """Return a system-prompt snippet from UI settings, or '' if nothing meaningful."""
+    if not settings or not isinstance(settings, dict):
+        return ''
+    depth_value = settings.get('depthValue')
+    depth_label = settings.get('depthLabel', '')
+    target = settings.get('durationTarget', 0)
+    estimate = settings.get('estimate', 0)
+
+    if not isinstance(depth_value, (int, float)) or not (0 <= depth_value <= 100):
+        depth_value = None
+    if not isinstance(target, (int, float)):
+        target = 0
+    target = max(0, min(90, int(target)))
+    if not isinstance(estimate, (int, float)):
+        estimate = 0
+    estimate = max(0, min(90, int(estimate)))
+
+    lines = []
+    if depth_value is not None:
+        lines.append(f'Depth/breadth slider: {int(depth_value)}/100 ({depth_label})')
+    if target > 0:
+        lines.append(f'Duration target: {target} min')
+        lines.append(f'Current estimate: {estimate} min')
+    if not lines:
+        return ''
+    return '\n\n## Current UI settings\n' + '\n'.join(f'- {l}' for l in lines)
+
+
 def _normalise_item(item):
     if isinstance(item, str):
         return {"text": item, "priority": 3}

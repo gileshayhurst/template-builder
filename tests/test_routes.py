@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-key-placeholder")
 import app as app_module
-from app import app as flask_app
+from app import app as flask_app, build_settings_context
 
 
 @pytest.fixture(autouse=True)
@@ -132,3 +132,51 @@ def test_export_returns_template(client):
     assert "filename" in data
     assert "Cooking-Test" in data["filename"]
     assert data["filename"].endswith(".txt")
+
+
+def test_build_settings_context_empty_inputs():
+    assert build_settings_context({}) == ''
+    assert build_settings_context(None) == ''
+    assert build_settings_context('bad') == ''
+    assert build_settings_context(42) == ''
+
+
+def test_build_settings_context_depth_only():
+    result = build_settings_context({'depthValue': 50, 'depthLabel': 'Balanced'})
+    assert '## Current UI settings' in result
+    assert 'Depth/breadth slider: 50/100 (Balanced)' in result
+    assert 'Duration target' not in result
+
+
+def test_build_settings_context_with_target_and_estimate():
+    result = build_settings_context({
+        'depthValue': 75, 'depthLabel': 'Slightly Deep',
+        'durationTarget': 30, 'estimate': 38
+    })
+    assert '## Current UI settings' in result
+    assert 'Depth/breadth slider: 75/100 (Slightly Deep)' in result
+    assert 'Duration target: 30 min' in result
+    assert 'Current estimate: 38 min' in result
+
+
+def test_build_settings_context_zero_target_excluded():
+    result = build_settings_context({
+        'depthValue': 50, 'depthLabel': 'Balanced',
+        'durationTarget': 0, 'estimate': 15
+    })
+    assert 'Duration target' not in result
+
+
+def test_build_settings_context_clamps_out_of_range_values():
+    result = build_settings_context({
+        'depthValue': 50, 'depthLabel': 'Balanced',
+        'durationTarget': 999, 'estimate': -5
+    })
+    assert 'Duration target: 90 min' in result
+    assert 'Current estimate: 0 min' in result
+
+
+def test_build_settings_context_invalid_depth_excluded():
+    result = build_settings_context({'depthValue': 150, 'depthLabel': 'Bad', 'durationTarget': 0})
+    assert 'Depth/breadth slider' not in result
+    assert result == ''
