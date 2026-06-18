@@ -313,3 +313,26 @@ body {
   user-select: none;
   white-space: nowrap;
 }
+
+/* Drag-to-reorder topic grip */
+.topic-grip {
+  cursor: grab;
+  user-select: none;
+  color: #ccc;
+  font-size: 14px;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 0 2px;
+  border-radius: 3px;
+  touch-action: none;
+}
+.topic-grip:hover { color: #888; }
+.topic-grip:focus {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+  color: #4f46e5;
+}
+
+.topic-block.dragging { opacity: 0.4; }
+.topic-block.drag-over-above { border-top: 2px solid #4f46e5; }
+.topic-block.drag-over-below { border-bottom: 2px solid #4f46e5; }

@@ -133,6 +133,40 @@ const state = {
   }
 };
 
+// ─── DRAG STATE ───────────────────────────────────────────────────────────────
+
+let dragState = null;
+
+function commitReorder(fromPos, toPos) {
+  if (fromPos === toPos) return;
+
+  // Capture collapse state by current array position before renumbering
+  const wasCollapsed = state.sections.topics.map(t =>
+    state.collapsedSections.has(`topic-${t.index}`)
+  );
+
+  // Reorder and renumber indices 1..N
+  state.sections.topics = DurationEngine.reorderTopics(state.sections.topics, fromPos, toPos);
+
+  // Apply the same permutation to wasCollapsed to track which topic moved where
+  const reorderedCollapsed = wasCollapsed.slice();
+  const [movedCollapsed] = reorderedCollapsed.splice(fromPos, 1);
+  reorderedCollapsed.splice(toPos, 0, movedCollapsed);
+
+  // Rebuild collapsedSections: keep non-topic keys; restore topic keys using new indices
+  const newCollapsed = new Set();
+  for (const key of state.collapsedSections) {
+    if (!key.startsWith("topic-")) newCollapsed.add(key);
+  }
+  state.sections.topics.forEach((t, i) => {
+    if (reorderedCollapsed[i]) newCollapsed.add(`topic-${t.index}`);
+  });
+  state.collapsedSections = newCollapsed;
+
+  renderTemplate();
+  updateDurationDisplay();
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -585,6 +619,16 @@ function renderTopicBlock(topic) {
   topicHeader.className = "topic-block-header";
   topicHeader.onclick = () => toggleSection(topicKey);
 
+  const grip = document.createElement("span");
+  grip.className = "topic-grip";
+  grip.textContent = "⠿";
+  grip.setAttribute("role", "button");
+  grip.setAttribute("tabindex", "0");
+  grip.setAttribute("aria-label", "Drag to reorder topic");
+  grip.addEventListener("pointerdown", () => { block.draggable = true; });
+  grip.addEventListener("pointerup",   () => { block.draggable = false; });
+  topicHeader.appendChild(grip);
+
   const chevron = document.createElement("span");
   chevron.className = "section-chevron";
   chevron.textContent = collapsed ? "▸" : "▾";
@@ -614,6 +658,58 @@ function renderTopicBlock(topic) {
   topicHeader.appendChild(removeBtn);
 
   block.appendChild(topicHeader);
+
+  block.addEventListener("dragstart", (e) => {
+    const fromPos = state.sections.topics.findIndex(t => t.index === topic.index);
+    dragState = { fromPos, toPos: fromPos };
+    block.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(topic.index)); // required for Firefox
+  });
+
+  block.addEventListener("dragover", (e) => {
+    if (!dragState) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const blockPos = state.sections.topics.findIndex(t => t.index === topic.index);
+    if (blockPos === dragState.fromPos) return;
+
+    document.querySelectorAll(".topic-block").forEach(b =>
+      b.classList.remove("drag-over-above", "drag-over-below"));
+
+    const rect = block.getBoundingClientRect();
+    const isUpper = e.clientY < rect.top + rect.height / 2;
+    block.classList.add(isUpper ? "drag-over-above" : "drag-over-below");
+
+    const fp = dragState.fromPos;
+    if (isUpper) {
+      dragState.toPos = fp < blockPos ? blockPos - 1 : blockPos;
+    } else {
+      dragState.toPos = fp < blockPos ? blockPos : blockPos + 1;
+    }
+  });
+
+  block.addEventListener("dragleave", () => {
+    block.classList.remove("drag-over-above", "drag-over-below");
+  });
+
+  block.addEventListener("drop", (e) => {
+    e.preventDefault();
+    document.querySelectorAll(".topic-block").forEach(b =>
+      b.classList.remove("drag-over-above", "drag-over-below"));
+    if (!dragState || dragState.toPos === undefined) { dragState = null; return; }
+    const { fromPos, toPos } = dragState;
+    dragState = null;
+    commitReorder(fromPos, toPos);
+  });
+
+  block.addEventListener("dragend", () => {
+    block.draggable = false;
+    block.classList.remove("dragging");
+    document.querySelectorAll(".topic-block").forEach(b =>
+      b.classList.remove("drag-over-above", "drag-over-below"));
+    dragState = null;
+  });
 
   if (!collapsed) {
     const body = document.createElement("div");
