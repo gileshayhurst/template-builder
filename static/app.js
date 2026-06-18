@@ -114,6 +114,8 @@ function updateDurationDisplay() {
   if (estimateFill) estimateFill.style.width = estimatePct.toFixed(1) + "%";
   if (targetLabelEl) targetLabelEl.textContent = targetLabelText;
   if (estimateLabelEl) estimateLabelEl.textContent = `● Est: ${estimate} min`;
+  const coachEl = document.querySelector(".duration-coach");
+  if (coachEl) coachEl.innerHTML = coachHtml();
 }
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -413,6 +415,7 @@ function renderSettingsStrip() {
 }
 
 function coachHtml() {
+  if (state.streaming) return '';
   const target = state.durationTarget;
   if (!target || target <= 0) {
     return `<div class="coach-hint">Set a target to get pacing suggestions.</div>`;
