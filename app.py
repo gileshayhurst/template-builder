@@ -127,8 +127,11 @@ def build_settings_context(settings):
     """Return a system-prompt snippet from UI settings, or '' if nothing meaningful."""
     if not settings or not isinstance(settings, dict):
         return ''
+    _VALID_DEPTH_LABELS = {"Breadth", "Slightly Broad", "Balanced", "Slightly Deep", "Deep"}
     depth_value = settings.get('depthValue')
     depth_label = settings.get('depthLabel', '')
+    if depth_label not in _VALID_DEPTH_LABELS:
+        depth_label = 'Balanced'
     target = settings.get('durationTarget', 0)
     estimate = settings.get('estimate', 0)
 

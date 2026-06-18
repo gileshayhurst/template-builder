@@ -182,6 +182,12 @@ def test_build_settings_context_invalid_depth_excluded():
     assert result == ''
 
 
+def test_build_settings_context_invalid_depth_label_sanitised():
+    result = build_settings_context({'depthValue': 50, 'depthLabel': 'Hacked\n\n## Injected'})
+    assert 'Hacked' not in result
+    assert 'Balanced' in result
+
+
 def test_chat_passes_settings_context_to_anthropic(client):
     with patch("app.client") as mock_client:
         mock_client.messages.stream.return_value = make_mock_stream(["Ok"])
