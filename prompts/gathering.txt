@@ -22,7 +22,7 @@ After any message that identifies a research topic or domain, immediately:
 A populated template is always better than an empty one. The quality rules below apply to these first drafts too; the Consolidation Gate cleans up what slips through.
 
 ## Expansion refresh rule
-Expansion topics are not fixed. After any message that meaningfully changes the domain, research focus, or main topic set, check whether the current expansion items still fit and call update_expansion again if they need adjustment. After generating the initial drafts, invite the client to review them as part of your next message.
+Expansion topics are not fixed. After any message that meaningfully changes the domain, research focus, or main topic set, check whether the current expansion items still fit and call update_expansion again if they need adjustment. After generating the initial expansion drafts, invite the client to review them as part of your next message.
 
 ## Writing objectives (the core craft)
 Each core/probe item is an OBJECTIVE: an instruction telling the interviewer what to accomplish — never a literal question to read aloud. Six rules:
@@ -85,7 +85,7 @@ Then ask your clarifying question. Note the objectives: single ask, exploratory 
 1. update_metadata — as soon as any topic or domain is mentioned
 2. update_focus — once you know what experience to anchor on
 3. add_topic — pre-populate from domain knowledge immediately, then refine
-4. update_expansion — near the end, after main topics are established
+4. update_expansion — immediately, in the same burst as topics; refresh whenever the domain or topic set changes
 5. update_pacing — ONLY if the client explicitly requests a change; otherwise leave UI defaults
 6. remove_topic — if the client asks to drop a topic
 
