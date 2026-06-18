@@ -73,12 +73,14 @@
     return { sections: next, depthValue };
   }
 
-  function candidateDelta(sections, depthValue, baseRaw, c) {
+  // deltaMin is the change in the DISPLAYED (rounded) estimate, so it always
+  // matches the duration bar — a suggestion never claims a move the bar won't show.
+  function candidateDelta(sections, depthValue, baseEst, c) {
     if (c.type === 'lower_depth' || c.type === 'raise_depth') {
-      return Math.round(estimateRawFor(sections, c.toValue) - baseRaw);
+      return estimateDurationFor(sections, c.toValue) - baseEst;
     }
     const r = applySuggestion(sections, depthValue, c);
-    return Math.round(estimateRawFor(r.sections, depthValue) - baseRaw);
+    return estimateDurationFor(r.sections, depthValue) - baseEst;
   }
 
   // Returns up to 3 suggestion descriptors, each:
@@ -94,15 +96,14 @@
     const gap = est - target;
     if (Math.abs(gap) <= TOLERANCE) return [];
 
-    const baseRaw = estimateRawFor(sections, depthValue);
     const topics = sections.topics || [];
     let cands = [];
 
     if (gap > 0) {
       // OVER target — trim, least valuable first.
-      // Probe/core item trims contribute < 0.5 min at current weights, so they
-      // round to a 0 delta and get filtered below. Kept as correct candidates
-      // for if the weight model changes; they simply never surface today.
+      // Item-level trims change the estimate by a fraction of a minute, so they
+      // usually leave the displayed (rounded) estimate unchanged and get filtered
+      // below — though one may surface when it tips the bar across a minute boundary.
       topics.forEach((t, ti) => {
         (t.probe || []).forEach((p, ii) => cands.push({
           type: 'remove_item', topicPos: ti, itemType: 'probe', itemIndex: ii,
@@ -128,9 +129,9 @@
       });
     } else {
       // UNDER target — fill, quality-improving first.
-      // Adding probes is the quality-improving fill move, but at current weights
-      // it rounds to a 0 delta and is filtered below (see note in the over-target
-      // branch). Kept for when probe weights grow large enough to surface.
+      // Adding probes is the quality-improving fill move, but a couple of probes
+      // usually leave the displayed estimate unchanged and get filtered below
+      // (see the over-target note); it surfaces only when it tips a minute boundary.
       topics.forEach((t, ti) => {
         if ((t.probe || []).length === 0) cands.push({
           type: 'add_probes', topicPos: ti, count: 2, _cls: 0, _cut: 0,
@@ -148,7 +149,7 @@
       cands.push({ type: 'add_topic', _cls: 3, _cut: 0, label: 'Add a new topic' });
     }
 
-    for (const c of cands) c.deltaMin = candidateDelta(sections, depthValue, baseRaw, c);
+    for (const c of cands) c.deltaMin = candidateDelta(sections, depthValue, est, c);
     cands = cands.filter((c) => c.deltaMin !== 0);
     cands = cands.filter((c) => Math.abs(gap + c.deltaMin) < Math.abs(gap));
     cands.sort((a, b) =>

@@ -44,9 +44,16 @@ test('over target: removes the lowest-priority topic first', () => {
   assert.strictEqual(s[0].deltaMin, -1);
   assert.match(s[0].label, /Drop/);
   assert.match(s[0].detail, /saves/);
+  const before = D.estimateDurationFor(sections, 100);
+  for (const c of s) {
+    const after = (c.type === 'raise_depth' || c.type === 'lower_depth')
+      ? D.estimateDurationFor(sections, c.toValue)
+      : D.estimateDurationFor(D.applySuggestion(sections, 100, c).sections, 100);
+    assert.strictEqual(after - before, c.deltaMin, 'deltaMin must equal the bar change for ' + c.type);
+  }
 });
 
-test('under target: suggests positive moves, none with zero delta', () => {
+test('under target: every suggestion deltaMin equals the actual bar change', () => {
   const sections = {
     topics: [
       { title: 'T1', priority: 3, core: [{ priority: 3 }], probe: [] },
@@ -55,15 +62,22 @@ test('under target: suggests positive moves, none with zero delta', () => {
       { title: 'T4', priority: 3, core: [{ priority: 3 }], probe: [] },
       { title: 'T5', priority: 3, core: [{ priority: 3 }], probe: [] },
     ],
-    expansion: ['E1', 'E2'], focus: 'x',
+    expansion: [], focus: '',
   };
-  // est at depth 25 = 4 min; target 20 -> well under.
-  const s = D.generateSuggestions(sections, 20, 25);
+  // depth 0 puts the estimate (3 min) near a rounding boundary, where
+  // add_topic's raw delta (~0.52) rounds up but the displayed bar does not move —
+  // exactly the case where deltaMin must track the bar, not the raw difference.
+  const depth = 0;
+  const before = D.estimateDurationFor(sections, depth); // 3
+  const s = D.generateSuggestions(sections, 20, depth);
   assert.ok(s.length > 0);
-  assert.ok(s.every((c) => c.deltaMin > 0));
-  assert.strictEqual(s[0].type, 'raise_depth');
-  assert.strictEqual(s[0].toValue, 50);
-  assert.strictEqual(s[0].deltaMin, 1);
+  for (const c of s) {
+    assert.ok(c.deltaMin > 0, 'under-target moves must add time');
+    const after = (c.type === 'raise_depth' || c.type === 'lower_depth')
+      ? D.estimateDurationFor(sections, c.toValue)
+      : D.estimateDurationFor(D.applySuggestion(sections, depth, c).sections, depth);
+    assert.strictEqual(after - before, c.deltaMin, 'deltaMin must equal the bar change for ' + c.type);
+  }
 });
 
 test('on target returns no suggestions', () => {
