@@ -602,6 +602,11 @@ function renderTopicBlock(topic) {
     renderTemplate();
   }));
 
+  const durationBadge = document.createElement("span");
+  durationBadge.className = "topic-duration-badge";
+  durationBadge.textContent = `~${DurationEngine.topicMinutes(topic, state.depthSliderValue)} min`;
+  topicHeader.appendChild(durationBadge);
+
   const removeBtn = document.createElement("button");
   removeBtn.className = "remove-topic-btn";
   removeBtn.textContent = "×";
