@@ -92,6 +92,13 @@
     return Math.max(1, Math.round(raw * depthFactorFor(depthValue)));
   }
 
+  function reorderTopics(topics, fromPos, toPos) {
+    const arr = topics.slice();
+    const [moved] = arr.splice(fromPos, 1);
+    arr.splice(toPos, 0, moved);
+    return arr.map((t, i) => ({ ...t, index: i + 1 }));
+  }
+
   // Returns up to 3 suggestion descriptors, each:
   //   { type, label, detail, deltaMin, ...params consumed by the UI layer }
   // Internal ranking fields on each descriptor:
@@ -174,7 +181,7 @@
     return cands.slice(0, 3);
   }
 
-  const api = { TOLERANCE, priorityFactor, depthFactorFor, estimateRawFor, estimateDurationFor, generateSuggestions, applySuggestion, topicMinutes };
+  const api = { TOLERANCE, priorityFactor, depthFactorFor, estimateRawFor, estimateDurationFor, generateSuggestions, applySuggestion, topicMinutes, reorderTopics };
   if (typeof window !== 'undefined') window.DurationEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })();

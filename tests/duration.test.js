@@ -135,3 +135,45 @@ test('topicMinutes changes when depth changes', () => {
   const deep    = D.topicMinutes(topic, 100);
   assert.ok(deep > shallow, 'deep estimate must exceed shallow');
 });
+
+test('reorderTopics: moves item to new position and renumbers indices', () => {
+  const topics = [
+    { index: 1, title: 'A', priority: 3, core: [], probe: [] },
+    { index: 2, title: 'B', priority: 3, core: [], probe: [] },
+    { index: 3, title: 'C', priority: 3, core: [], probe: [] },
+  ];
+  const result = D.reorderTopics(topics, 0, 2); // move A to after C
+  assert.deepStrictEqual(result.map(t => t.title), ['B', 'C', 'A']);
+  assert.deepStrictEqual(result.map(t => t.index), [1, 2, 3]);
+});
+
+test('reorderTopics: no-op when fromPos === toPos', () => {
+  const topics = [
+    { index: 1, title: 'A', priority: 3, core: [], probe: [] },
+    { index: 2, title: 'B', priority: 3, core: [], probe: [] },
+  ];
+  const result = D.reorderTopics(topics, 1, 1);
+  assert.deepStrictEqual(result.map(t => t.title), ['A', 'B']);
+  assert.deepStrictEqual(result.map(t => t.index), [1, 2]);
+});
+
+test('reorderTopics: does not mutate input array', () => {
+  const topics = [
+    { index: 1, title: 'A', priority: 3, core: [], probe: [] },
+    { index: 2, title: 'B', priority: 3, core: [], probe: [] },
+  ];
+  D.reorderTopics(topics, 0, 1);
+  assert.strictEqual(topics[0].title, 'A');
+  assert.strictEqual(topics[0].index, 1);
+});
+
+test('reorderTopics: move last item to first position', () => {
+  const topics = [
+    { index: 1, title: 'A', priority: 3, core: [], probe: [] },
+    { index: 2, title: 'B', priority: 3, core: [], probe: [] },
+    { index: 3, title: 'C', priority: 3, core: [], probe: [] },
+  ];
+  const result = D.reorderTopics(topics, 2, 0);
+  assert.deepStrictEqual(result.map(t => t.title), ['C', 'A', 'B']);
+  assert.deepStrictEqual(result.map(t => t.index), [1, 2, 3]);
+});
