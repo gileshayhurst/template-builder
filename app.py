@@ -113,7 +113,7 @@ GATHERING_TOOLS = [
     },
     {
         "name": "update_expansion",
-        "description": "Set the full list of expansion topics.",
+        "description": "Set the full list of expansion topics — secondary themes to explore if the main guide runs short. Call in the initial burst with domain-inferred drafts, and re-call whenever the research focus or main topic set changes significantly. Items should be concise topic labels, distinct from the main topics.",
         "input_schema": {
             "type": "object",
             "properties": {"items": {"type": "array", "items": {"type": "string"}}},
