@@ -363,10 +363,68 @@ function renderSettingsStrip() {
             oninput="setDurationTarget(parseInt(this.value, 10) || 0)">
           <span class="duration-unit">min</span>
         </div>
+        <div class="duration-coach">${coachHtml()}</div>
       </div>
     </div>
     `}
   `;
+}
+
+function coachHtml() {
+  const target = state.durationTarget;
+  if (!target || target <= 0) {
+    return `<div class="coach-hint">Set a target to get pacing suggestions.</div>`;
+  }
+  const est = estimateDuration();
+  const gap = est - target;
+  if (Math.abs(gap) <= DurationEngine.TOLERANCE) {
+    return `<div class="coach-ontarget">✓ On target (~${est} min)</div>`;
+  }
+  const suggestions = DurationEngine.generateSuggestions(state.sections, target, state.depthSliderValue);
+  state._coachSuggestions = suggestions;
+  const head = gap > 0 ? `≈${gap} min over target` : `≈${-gap} min under target`;
+  const undo = state._coachUndo
+    ? `<button class="coach-undo" onclick="undoCoach()">↶ Undo last change</button>` : "";
+  if (suggestions.length === 0) {
+    return `<div class="coach-head">${escHtml(head)}</div>`
+      + `<div class="coach-hint">No single change gets closer — adjust topics manually.</div>${undo}`;
+  }
+  const rows = suggestions.map((s, i) => `
+    <div class="coach-row">
+      <div class="coach-row-text">
+        <span class="coach-label">${escHtml(s.label)}</span>
+        <span class="coach-detail">${escHtml(s.detail)}</span>
+      </div>
+      <button class="coach-apply" onclick="applyCoachSuggestion(${i})">Apply</button>
+    </div>`).join("");
+  return `<div class="coach-head">${escHtml(head)}</div>${rows}${undo}`;
+}
+
+function applyCoachSuggestion(i) {
+  const s = state._coachSuggestions && state._coachSuggestions[i];
+  if (!s) return;
+  state._coachUndo = {
+    sections: JSON.parse(JSON.stringify(state.sections)),
+    depthSliderValue: state.depthSliderValue,
+  };
+  if (s.type === "lower_depth" || s.type === "raise_depth") {
+    applyDepthPreset(s.toValue);           // updates depth + pacing + re-renders
+  } else {
+    const r = DurationEngine.applySuggestion(state.sections, state.depthSliderValue, s);
+    state.sections = r.sections;
+    renderTemplate();
+  }
+  updateDurationDisplay();
+}
+
+function undoCoach() {
+  const u = state._coachUndo;
+  if (!u) return;
+  state.sections = u.sections;
+  state.depthSliderValue = u.depthSliderValue;
+  state._coachUndo = null;
+  renderTemplate();
+  updateDurationDisplay();
 }
 
 function renderStarWidget(currentPriority, onClickFn) {
