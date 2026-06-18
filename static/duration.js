@@ -61,12 +61,15 @@
       t.probe = t.probe || [];
       for (let i = 0; i < s.count; i++) t.probe.push({ text: '', priority: 3 });
     } else if (s.type === 'promote_expansion') {
-      const title = (next.expansion || [])[s.expansionIndex];
-      next.expansion.splice(s.expansionIndex, 1);
+      const exp = next.expansion || (next.expansion = []);
+      const title = exp[s.expansionIndex];
+      exp.splice(s.expansionIndex, 1);
       topics.push({ index: maxIndex(topics) + 1, title, priority: 3, core: [{ text: '', priority: 3 }], probe: [] });
     } else if (s.type === 'add_topic') {
       topics.push({ index: maxIndex(topics) + 1, title: '', priority: 3, core: [{ text: '', priority: 3 }], probe: [] });
     }
+    // Depth moves (lower_depth/raise_depth) are intentionally a no-op here —
+    // the UI layer applies those via its depth control, not through this function.
     return { sections: next, depthValue };
   }
 
@@ -78,6 +81,13 @@
     return Math.round(estimateRawFor(r.sections, depthValue) - baseRaw);
   }
 
+  // Returns up to 3 suggestion descriptors, each:
+  //   { type, label, detail, deltaMin, ...params consumed by the UI layer }
+  // Internal ranking fields on each descriptor:
+  //   _cls — candidate class (lower = tried first: most quality-preserving)
+  //   _cut — priority value of the thing being cut (tiebreak within a class)
+  // Position params the UI passes back to applySuggestion:
+  //   topicPos / itemType+itemIndex / expansionIndex / toValue (depth moves) / count.
   function generateSuggestions(sections, target, depthValue) {
     if (!target || target <= 0) return [];
     const est = estimateDurationFor(sections, depthValue);
@@ -90,6 +100,9 @@
 
     if (gap > 0) {
       // OVER target — trim, least valuable first.
+      // Probe/core item trims contribute < 0.5 min at current weights, so they
+      // round to a 0 delta and get filtered below. Kept as correct candidates
+      // for if the weight model changes; they simply never surface today.
       topics.forEach((t, ti) => {
         (t.probe || []).forEach((p, ii) => cands.push({
           type: 'remove_item', topicPos: ti, itemType: 'probe', itemIndex: ii,
@@ -115,6 +128,9 @@
       });
     } else {
       // UNDER target — fill, quality-improving first.
+      // Adding probes is the quality-improving fill move, but at current weights
+      // it rounds to a 0 delta and is filtered below (see note in the over-target
+      // branch). Kept for when probe weights grow large enough to surface.
       topics.forEach((t, ti) => {
         if ((t.probe || []).length === 0) cands.push({
           type: 'add_probes', topicPos: ti, count: 2, _cls: 0, _cut: 0,
