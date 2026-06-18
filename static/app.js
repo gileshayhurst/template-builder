@@ -240,7 +240,15 @@ async function streamFromServer(message) {
     const resp = await fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message })
+      body: JSON.stringify({
+        message,
+        settings: {
+          depthValue: state.depthSliderValue,
+          depthLabel: { 0: "Breadth", 25: "Slightly Broad", 50: "Balanced", 75: "Slightly Deep", 100: "Deep" }[state.depthSliderValue] || "Balanced",
+          durationTarget: state.durationTarget,
+          estimate: estimateDuration()
+        }
+      })
     });
 
     if (!resp.ok) throw new Error(`Server error ${resp.status}`);
