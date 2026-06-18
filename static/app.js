@@ -627,6 +627,7 @@ function renderTopicBlock(topic) {
   grip.setAttribute("aria-label", "Drag to reorder topic");
   grip.addEventListener("pointerdown", () => { block.draggable = true; });
   grip.addEventListener("pointerup",   () => { block.draggable = false; });
+  grip.addEventListener("click", e => e.stopPropagation());
   topicHeader.appendChild(grip);
 
   const chevron = document.createElement("span");
@@ -689,7 +690,8 @@ function renderTopicBlock(topic) {
     }
   });
 
-  block.addEventListener("dragleave", () => {
+  block.addEventListener("dragleave", (e) => {
+    if (block.contains(e.relatedTarget)) return;
     block.classList.remove("drag-over-above", "drag-over-below");
   });
 
