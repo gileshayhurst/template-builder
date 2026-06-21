@@ -849,7 +849,9 @@ async function exportTemplate() {
   const overlay = document.getElementById("modal-overlay");
   const reviewEl = document.getElementById("modal-review");
   const templateEl = document.getElementById("modal-template");
+  const titleEl = document.getElementById("modal-title");
 
+  titleEl.textContent = "Export Template — Reviewing…";
   reviewEl.innerHTML = reviewSpinnerHtml();
   reviewEl.classList.remove("hidden");
   templateEl.classList.add("hidden");
@@ -867,13 +869,14 @@ async function exportTemplate() {
     reviewData = await resp.json();
     if (reviewData.error) throw new Error(reviewData.error);
   } catch (err) {
-    reviewEl.innerHTML = reviewErrorHtml(escHtml(err.message));
+    reviewEl.innerHTML = reviewErrorHtml(err.message);
     return;
   }
 
   if (reviewData.overall === "pass") {
     await generateTemplate();
   } else {
+    titleEl.textContent = "Export Template — Quality Review";
     reviewEl.innerHTML = reviewReportHtml(reviewData);
   }
 }
@@ -888,7 +891,7 @@ function reviewSpinnerHtml() {
 
 function reviewErrorHtml(msg) {
   return `<div class="review-error">
-    <p>Quality review unavailable: ${msg}</p>
+    <p>Quality review unavailable: ${escHtml(msg)}</p>
     <button class="btn-generate" onclick="generateTemplate()">Generate Anyway &rarr;</button>
   </div>`;
 }
@@ -918,7 +921,7 @@ function reviewReportHtml(data) {
 }
 
 function issueCardHtml(issue, isItemIssue) {
-  const sev = issue.severity;
+  const sev = issue.severity === "error" ? "error" : "warning";
   const loc = isItemIssue
     ? `Topic ${issue.topic_index} &middot; ${escHtml(issue.topic_title)} &middot; ${issue.item_type === "core" ? "Core" : "Probe"} ${issue.item_index + 1}`
     : "";
@@ -941,7 +944,9 @@ async function generateTemplate() {
   const reviewEl = document.getElementById("modal-review");
   const templateEl = document.getElementById("modal-template");
   const outputEl = document.getElementById("template-output");
+  const titleEl = document.getElementById("modal-title");
 
+  titleEl.textContent = "Exported Template";
   reviewEl.classList.add("hidden");
   templateEl.classList.remove("hidden");
   outputEl.textContent = "Generating template…";
