@@ -211,9 +211,9 @@ def _normalise_item(item):
 
 def format_template(sections: dict) -> str:
     meta = sections.get("metadata", {})
-    title = meta.get("title", "")
-    version = meta.get("version", "1.0")
-    date = meta.get("date", "")
+    title = meta.get("title") or ""
+    version = meta.get("version") or "1.0"
+    date = meta.get("date") or ""
     pacing = sections.get("pacing", {})
     focus = sections.get("focus", "")
     topics = sections.get("topics", [])
@@ -354,25 +354,29 @@ def export_route():
     body = request.get_json(silent=True) or {}
     sections = body.get("sections", {})
 
-    template_text = format_template(sections)
+    try:
+        template_text = format_template(sections)
 
-    def safe_str(s, default=""):
-        return "".join(c if c.isalnum() or c in " -_" else "" for c in str(s or default)).strip()
+        def safe_str(s, default=""):
+            return "".join(c if c.isalnum() or c in " -_" else "" for c in str(s or default)).strip()
 
-    title = sections.get("metadata", {}).get("title", "template")
-    version = sections.get("metadata", {}).get("version", "1.0")
-    date = sections.get("metadata", {}).get("date", "")
-    safe_title = safe_str(title, "template").replace(" ", "-")
-    safe_version = safe_str(version, "1.0")
-    safe_date = safe_str(date)
-    filename = f"{safe_title}-v{safe_version}-{safe_date}.txt"
+        title = sections.get("metadata", {}).get("title", "template")
+        version = sections.get("metadata", {}).get("version", "1.0")
+        date = sections.get("metadata", {}).get("date", "")
+        safe_title = safe_str(title, "template").replace(" ", "-")
+        safe_version = safe_str(version, "1.0")
+        safe_date = safe_str(date)
+        filename = f"{safe_title}-v{safe_version}-{safe_date}.txt"
 
-    output_dir = os.path.join(BASE_DIR, "output")
-    os.makedirs(output_dir, exist_ok=True)
-    with open(os.path.join(output_dir, filename), "w", encoding="utf-8") as f:
-        f.write(template_text)
+        output_dir = os.path.join(BASE_DIR, "output")
+        os.makedirs(output_dir, exist_ok=True)
+        with open(os.path.join(output_dir, filename), "w", encoding="utf-8") as f:
+            f.write(template_text)
 
-    return jsonify({"template": template_text, "filename": filename})
+        return jsonify({"template": template_text, "filename": filename})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/reset", methods=["POST"])

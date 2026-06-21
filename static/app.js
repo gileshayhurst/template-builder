@@ -900,7 +900,7 @@ function reviewReportHtml(data) {
   const itemIssues = data.item_issues || [];
   const structIssues = data.structural_issues || [];
   const count = itemIssues.length + structIssues.length;
-  const sev = data.overall;
+  const sev = ["warning", "error"].includes(data.overall) ? data.overall : "warning";
 
   let html = `<div class="review-badge ${sev}">&#9888; ${count} issue${count !== 1 ? "s" : ""} found</div>`;
 
