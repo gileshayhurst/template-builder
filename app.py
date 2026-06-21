@@ -1,5 +1,7 @@
 import json
+import logging
 import os
+import traceback
 from flask import Flask, request, Response, render_template, jsonify
 import anthropic
 from config import ANTHROPIC_API_KEY, MODEL, PORT
@@ -342,7 +344,6 @@ def chat():
         try:
             yield from stream_conversation(message, system)
         except Exception as e:
-            import traceback
             traceback.print_exc()
             yield f"event: error\ndata: {json.dumps(type(e).__name__ + ': ' + str(e))}\n\n"
     return Response(safe_stream(), mimetype="text/event-stream")
@@ -350,7 +351,8 @@ def chat():
 
 @app.route("/export", methods=["POST"])
 def export_route():
-    sections = request.json["sections"]
+    body = request.get_json(silent=True) or {}
+    sections = body.get("sections", {})
 
     template_text = format_template(sections)
 
@@ -381,7 +383,8 @@ def reset():
 
 @app.route("/review", methods=["POST"])
 def review_route():
-    sections = request.json["sections"]
+    body = request.get_json(silent=True) or {}
+    sections = body.get("sections", {})
     try:
         response = client.messages.create(
             model=MODEL,
@@ -397,9 +400,9 @@ def review_route():
         for block in response.content:
             if block.type == "tool_use" and block.name == "submit_review":
                 return jsonify(block.input)
-        return jsonify({"overall": "pass", "item_issues": [], "structural_issues": []})
+        logging.warning("review_route: API returned no submit_review tool call")
+        return jsonify({"error": "reviewer returned no tool call"}), 500
     except Exception as e:
-        import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 

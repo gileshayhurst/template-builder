@@ -6,6 +6,8 @@ Your only output is to call the submit_review tool with your complete findings. 
 
 Check every core and probe item in every topic. For each violation, add an entry to item_issues.
 
+Use 0-based item_index: the position of the item in its core or probe array (first item = 0).
+
 ### compound_ask (severity: error)
 The item joins two distinct objectives with "and". Each item must contain exactly one ask.
 Bad: "Explore what the participant bought and determine if they'll return"
