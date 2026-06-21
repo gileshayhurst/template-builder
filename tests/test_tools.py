@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 import pytest
-from app import process_tool_call
+from app import process_tool_call, format_template
 
 
 def test_update_metadata():
@@ -92,3 +92,120 @@ def test_update_expansion():
 def test_unknown_tool_raises():
     with pytest.raises(ValueError):
         process_tool_call("nonexistent_tool", {})
+
+
+from app import format_template
+
+
+FULL_SECTIONS = {
+    "metadata": {"title": "T", "version": "2.0", "date": "2026-01-01"},
+    "pacing": {
+        "do_not_rush": "A", "core_vs_probe": "B", "one_ask_per_turn": "C",
+        "keep_light": "D", "follow_signals": "E", "original_followups": "F",
+        "selective_probing": "G", "finish_line": "H"
+    },
+    "focus": "Focus text.",
+    "topics": [
+        {
+            "index": 1, "title": "Topic one", "priority": 5,
+            "core": [{"text": "Core item.", "priority": 5}],
+            "probe": [{"text": "Probe item.", "priority": 2}]
+        },
+        {
+            "index": 2, "title": "Topic two", "priority": 3,
+            "core": [{"text": "Core two.", "priority": 3}],
+            "probe": []
+        }
+    ],
+    "expansion": ["Exp A", "Exp B"]
+}
+
+EXPECTED_FULL = (
+    "[Prompt metadata only: T | v2.0 | 2026-01-01]\n"
+    "\n"
+    "# Pacing Instructions\n"
+    "- **Do Not Rush** A\n"
+    "\n"
+    "- **Core vs. Probe:** B\n"
+    "- **One main ask per turn:** C\n"
+    "- **Keep questions light:** D\n"
+    "\n"
+    "- **Follow strong signals:** E\n"
+    "- **Original follow-ups allowed:** F\n"
+    "- **Selective probing:** G\n"
+    "\n"
+    "- **The Finish Line** H\n"
+    "\n"
+    "\n"
+    "\n"
+    "# Main Interview Guide: T\n"
+    "\n"
+    "## Interview focus\n"
+    "- [Core] Focus text.\n"
+    "\n"
+    "## Topic 1 [P:5]: Topic one\n"
+    "- [Core][P:5] Core item.\n"
+    "- [Probe][P:2] Probe item.\n"
+    "\n"
+    "## Topic 2 [P:3]: Topic two\n"
+    "- [Core][P:3] Core two.\n"
+    "\n"
+    "# Expansion Topics\n"
+    "Use these for secondary discovery as instructed\n"
+    "- Exp A\n"
+    "- Exp B"
+)
+
+
+def test_format_template_full():
+    assert format_template(FULL_SECTIONS) == EXPECTED_FULL
+
+
+def test_format_template_no_focus():
+    s = {**FULL_SECTIONS, "focus": ""}
+    result = format_template(s)
+    assert "## Interview focus" not in result
+    assert "- [Core] " not in result
+    assert "# Main Interview Guide: T" in result
+
+
+def test_format_template_no_expansion():
+    s = {**FULL_SECTIONS, "expansion": []}
+    result = format_template(s)
+    assert "# Expansion Topics" not in result
+
+
+def test_format_template_no_probe_lines():
+    """A topic with no probe items must emit no [Probe] lines."""
+    result = format_template(FULL_SECTIONS)
+    lines = result.splitlines()
+    topic2_idx = next(i for i, l in enumerate(lines) if "Topic two" in l)
+    # Collect lines belonging to topic 2 (up to next ## or end)
+    topic2_lines = []
+    for line in lines[topic2_idx + 1:]:
+        if line.startswith("## ") or line.startswith("# "):
+            break
+        topic2_lines.append(line)
+    assert not any("[Probe]" in l for l in topic2_lines)
+
+
+def test_format_template_default_priority():
+    """Items missing priority should default to 3."""
+    s = {
+        **FULL_SECTIONS,
+        "topics": [
+            {"index": 1, "title": "T", "priority": 3,
+             "core": [{"text": "No prio"}], "probe": []}
+        ]
+    }
+    result = format_template(s)
+    assert "- [Core][P:3] No prio" in result
+
+
+def test_format_template_pacing_groups():
+    """Verify blank-line grouping: 1 / blank / 3 / blank / 3 / blank / 1 / 3-blanks / heading."""
+    result = format_template(FULL_SECTIONS)
+    # Three blank lines between The Finish Line and # Main Interview Guide
+    assert "- **The Finish Line** H\n\n\n\n# Main Interview Guide" in result
+    # One blank line between do_not_rush and core_vs_probe group
+    assert "- **Do Not Rush** A\n\n- **Core vs. Probe:**" in result

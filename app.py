@@ -12,9 +12,6 @@ BASE_DIR = os.path.dirname(__file__)
 with open(os.path.join(BASE_DIR, "prompts", "gathering.txt")) as f:
     GATHERING_PROMPT = f.read()
 
-with open(os.path.join(BASE_DIR, "prompts", "generation.txt")) as f:
-    GENERATION_PROMPT = f.read()
-
 conversation_history = []
 
 GATHERING_TOOLS = [
@@ -161,6 +158,64 @@ def _normalise_item(item):
     return {"text": item["text"], "priority": item.get("priority", 3)}
 
 
+def format_template(sections: dict) -> str:
+    meta = sections.get("metadata", {})
+    title = meta.get("title", "")
+    version = meta.get("version", "1.0")
+    date = meta.get("date", "")
+    pacing = sections.get("pacing", {})
+    focus = sections.get("focus", "")
+    topics = sections.get("topics", [])
+    expansion = sections.get("expansion", [])
+
+    parts = []
+    parts.append(f"[Prompt metadata only: {title} | v{version} | {date}]")
+    parts.append("")
+    parts.append("# Pacing Instructions")
+    parts.append(f"- **Do Not Rush** {pacing.get('do_not_rush', '')}")
+    parts.append("")
+    parts.append(f"- **Core vs. Probe:** {pacing.get('core_vs_probe', '')}")
+    parts.append(f"- **One main ask per turn:** {pacing.get('one_ask_per_turn', '')}")
+    parts.append(f"- **Keep questions light:** {pacing.get('keep_light', '')}")
+    parts.append("")
+    parts.append(f"- **Follow strong signals:** {pacing.get('follow_signals', '')}")
+    parts.append(f"- **Original follow-ups allowed:** {pacing.get('original_followups', '')}")
+    parts.append(f"- **Selective probing:** {pacing.get('selective_probing', '')}")
+    parts.append("")
+    parts.append(f"- **The Finish Line** {pacing.get('finish_line', '')}")
+    parts.append("")
+    parts.append("")
+    parts.append("")
+    parts.append(f"# Main Interview Guide: {title}")
+    parts.append("")
+
+    if focus:
+        parts.append("## Interview focus")
+        parts.append(f"- [Core] {focus}")
+        parts.append("")
+
+    for i, topic in enumerate(topics, 1):
+        p = topic.get("priority", 3)
+        parts.append(f"## Topic {i} [P:{p}]: {topic.get('title', '')}")
+        for item in topic.get("core", []):
+            ip = item.get("priority", 3) if isinstance(item, dict) else 3
+            text = item.get("text", "") if isinstance(item, dict) else item
+            parts.append(f"- [Core][P:{ip}] {text}")
+        for item in topic.get("probe", []):
+            ip = item.get("priority", 3) if isinstance(item, dict) else 3
+            text = item.get("text", "") if isinstance(item, dict) else item
+            parts.append(f"- [Probe][P:{ip}] {text}")
+        parts.append("")
+
+    if expansion:
+        parts.append("# Expansion Topics")
+        parts.append("Use these for secondary discovery as instructed")
+        for item in expansion:
+            parts.append(f"- {item}")
+
+    return "\n".join(parts)
+
+
 def process_tool_call(name, input_data):
     if name == "update_metadata":
         return {"section": "metadata", "payload": {"title": input_data["title"]}}
@@ -250,17 +305,7 @@ def chat():
 def export_route():
     sections = request.json["sections"]
 
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=4096,
-        system=GENERATION_PROMPT,
-        messages=[{
-            "role": "user",
-            "content": f"Format this template data into the exact template syntax:\n\n{json.dumps(sections, indent=2)}"
-        }]
-    )
-
-    template_text = response.content[0].text
+    template_text = format_template(sections)
 
     def safe_str(s, default=""):
         return "".join(c if c.isalnum() or c in " -_" else "" for c in str(s or default)).strip()
