@@ -94,9 +94,6 @@ def test_unknown_tool_raises():
         process_tool_call("nonexistent_tool", {})
 
 
-from app import format_template
-
-
 FULL_SECTIONS = {
     "metadata": {"title": "T", "version": "2.0", "date": "2026-01-01"},
     "pacing": {
@@ -203,7 +200,7 @@ def test_format_template_default_priority():
 
 
 def test_format_template_pacing_groups():
-    """Verify blank-line grouping: 1 / blank / 3 / blank / 3 / blank / 1 / 3-blanks / heading."""
+    """Verify blank-line grouping between pacing rules and 3 blank lines before the guide heading."""
     result = format_template(FULL_SECTIONS)
     # Three blank lines between The Finish Line and # Main Interview Guide
     assert "- **The Finish Line** H\n\n\n\n# Main Interview Guide" in result

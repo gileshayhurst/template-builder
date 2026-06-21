@@ -198,13 +198,11 @@ def format_template(sections: dict) -> str:
         p = topic.get("priority", 3)
         parts.append(f"## Topic {i} [P:{p}]: {topic.get('title', '')}")
         for item in topic.get("core", []):
-            ip = item.get("priority", 3) if isinstance(item, dict) else 3
-            text = item.get("text", "") if isinstance(item, dict) else item
-            parts.append(f"- [Core][P:{ip}] {text}")
+            item = _normalise_item(item)
+            parts.append(f"- [Core][P:{item['priority']}] {item['text']}")
         for item in topic.get("probe", []):
-            ip = item.get("priority", 3) if isinstance(item, dict) else 3
-            text = item.get("text", "") if isinstance(item, dict) else item
-            parts.append(f"- [Probe][P:{ip}] {text}")
+            item = _normalise_item(item)
+            parts.append(f"- [Probe][P:{item['priority']}] {item['text']}")
         parts.append("")
 
     if expansion:
