@@ -12,6 +12,9 @@ BASE_DIR = os.path.dirname(__file__)
 with open(os.path.join(BASE_DIR, "prompts", "gathering.txt")) as f:
     GATHERING_PROMPT = f.read()
 
+with open(os.path.join(BASE_DIR, "prompts", "review.txt")) as f:
+    REVIEW_PROMPT = f.read()
+
 conversation_history = []
 
 GATHERING_TOOLS = [
@@ -118,6 +121,52 @@ GATHERING_TOOLS = [
         }
     }
 ]
+
+REVIEW_TOOL = {
+    "name": "submit_review",
+    "description": "Submit the quality review findings for the interview template.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "overall": {
+                "type": "string",
+                "enum": ["pass", "warning", "error"]
+            },
+            "item_issues": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "topic_index": {"type": "integer"},
+                        "topic_title": {"type": "string"},
+                        "item_type": {"type": "string", "enum": ["core", "probe"]},
+                        "item_index": {"type": "integer"},
+                        "text": {"type": "string"},
+                        "rule": {"type": "string"},
+                        "severity": {"type": "string", "enum": ["error", "warning"]},
+                        "explanation": {"type": "string"},
+                        "suggestion": {"type": "string"}
+                    },
+                    "required": ["topic_index", "topic_title", "item_type",
+                                 "item_index", "text", "rule", "severity", "explanation"]
+                }
+            },
+            "structural_issues": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "rule": {"type": "string"},
+                        "severity": {"type": "string", "enum": ["error", "warning"]},
+                        "explanation": {"type": "string"}
+                    },
+                    "required": ["rule", "severity", "explanation"]
+                }
+            }
+        },
+        "required": ["overall", "item_issues", "structural_issues"]
+    }
+}
 
 
 def build_settings_context(settings):
@@ -328,6 +377,31 @@ def export_route():
 def reset():
     conversation_history.clear()
     return jsonify({"ok": True})
+
+
+@app.route("/review", methods=["POST"])
+def review_route():
+    sections = request.json["sections"]
+    try:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=2048,
+            system=REVIEW_PROMPT,
+            tools=[REVIEW_TOOL],
+            tool_choice={"type": "any"},
+            messages=[{
+                "role": "user",
+                "content": f"Review this interview template:\n\n{json.dumps(sections, indent=2)}"
+            }]
+        )
+        for block in response.content:
+            if block.type == "tool_use" and block.name == "submit_review":
+                return jsonify(block.input)
+        return jsonify({"overall": "pass", "item_issues": [], "structural_issues": []})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
