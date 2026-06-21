@@ -52,7 +52,7 @@ If `overall == "pass"`, Phase 2 begins automatically with no extra user action.
 | Add | `prompts/review.txt` — AI Reviewer system prompt |
 | Add | `format_template(sections)` function in `app.py` |
 | Add | `POST /review` route in `app.py` |
-| Update | `POST /export` — calls `format_template()` only, no Claude |
+| Update | `POST /export` — calls `format_template()` only, no Claude; file-saving logic unchanged |
 | Add | formatter tests in `tests/test_tools.py` |
 | Update | `static/app.js` — two-phase export modal flow |
 
@@ -139,7 +139,7 @@ The prompt includes:
 
 ### What the reviewer checks
 
-**Per-item checks** (applied to every core and probe objective):
+**Per-item checks** (applied to every core and probe objective; each maps to a specific `item_type` + `item_index` in `item_issues`):
 
 | Rule code | What it catches |
 |---|---|
@@ -147,18 +147,13 @@ The prompt includes:
 | `diagnostic_verb` | determine / assess / evaluate / confirm / verify / identify whether |
 | `assumed_experience` | emotion or event assumed to have occurred (e.g. "why checkout was frustrating") |
 | `vague_specificity` | contentless phrasing — "their experience" or "their thoughts" with nothing specific named |
+| `probe_restates_core` | A probe that adds no new direction — effectively a reworded core (points to the specific probe item) |
 
-**Per-topic checks:**
-
-| Rule code | What it catches |
-|---|---|
-| `probe_restates_core` | A probe that adds no new direction — is effectively a reworded core |
-| `missing_probe` | A topic with no probe at all |
-
-**Structural checks** (holistic, across the whole template):
+**Structural checks** (holistic, across the whole template; go in `structural_issues`):
 
 | Rule code | What it catches |
 |---|---|
+| `missing_probe` | A topic with no probe item at all (explanation names the specific topic) |
 | `topic_overlap` | Two topics targeting the same underlying thing |
 | `wrong_topic_order` | Sensitive or evaluative topic placed before concrete warm-up topics |
 | `focus_is_goal` | Focus written as a research goal ("understand loyalty drivers") not an experience anchor |
