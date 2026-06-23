@@ -290,6 +290,7 @@ async function streamFromServer(message) {
         }
       }
     }
+    polishTemplate();
   } catch (err) {
     appendMessage("ai", `⚠ Could not reach AI: ${err.message}`);
   } finally {
@@ -842,113 +843,37 @@ function addItem(topicIndex, type) {
   if (topic) { topic[type].push({ text: "", priority: 3 }); renderTemplate(); }
 }
 
+async function polishTemplate() {
+  try {
+    const resp = await fetch("/polish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sections: state.sections })
+    });
+    const data = await resp.json();
+    for (const update of (data.updates || [])) {
+      applyUpdate(update);
+    }
+  } catch (err) {
+    console.warn("Polish failed:", err);
+  }
+}
+
 // ─── EXPORT ───────────────────────────────────────────────────────────────────
 
 async function exportTemplate() {
   const modal = document.getElementById("export-modal");
   const overlay = document.getElementById("modal-overlay");
-  const reviewEl = document.getElementById("modal-review");
-  const templateEl = document.getElementById("modal-template");
-  const titleEl = document.getElementById("modal-title");
-
-  titleEl.textContent = "Export Template — Reviewing…";
-  reviewEl.innerHTML = reviewSpinnerHtml();
-  reviewEl.classList.remove("hidden");
-  templateEl.classList.add("hidden");
   modal.classList.remove("hidden");
   overlay.classList.remove("hidden");
-
-  let reviewData;
-  try {
-    const resp = await fetch("/review", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sections: state.sections })
-    });
-    if (!resp.ok) throw new Error(`Review failed: ${resp.status}`);
-    reviewData = await resp.json();
-    if (reviewData.error) throw new Error(reviewData.error);
-  } catch (err) {
-    reviewEl.innerHTML = reviewErrorHtml(err.message);
-    return;
-  }
-
-  if (reviewData.overall === "pass") {
-    await generateTemplate();
-  } else {
-    titleEl.textContent = "Export Template — Quality Review";
-    reviewEl.innerHTML = reviewReportHtml(reviewData);
-  }
-}
-
-function reviewSpinnerHtml() {
-  return `<div class="review-spinner">
-    <div class="spinner"></div>
-    <p>Reviewing template quality&hellip;</p>
-    <p class="review-hint">Checking objectives against interview guide rules</p>
-  </div>`;
-}
-
-function reviewErrorHtml(msg) {
-  return `<div class="review-error">
-    <p>Quality review unavailable: ${escHtml(msg)}</p>
-    <button class="btn-generate" onclick="generateTemplate()">Generate Anyway &rarr;</button>
-  </div>`;
-}
-
-function reviewReportHtml(data) {
-  const itemIssues = data.item_issues || [];
-  const structIssues = data.structural_issues || [];
-  const count = itemIssues.length + structIssues.length;
-  const sev = ["warning", "error"].includes(data.overall) ? data.overall : "warning";
-
-  let html = `<div class="review-badge ${sev}">&#9888; ${count} issue${count !== 1 ? "s" : ""} found</div>`;
-
-  if (itemIssues.length > 0) {
-    html += `<div class="review-section-label">Item issues</div>`;
-    itemIssues.forEach(issue => { html += issueCardHtml(issue, true); });
-  }
-  if (structIssues.length > 0) {
-    html += `<div class="review-section-label">Structural</div>`;
-    structIssues.forEach(issue => { html += issueCardHtml(issue, false); });
-  }
-
-  html += `<div class="review-actions">
-    <button class="btn-fix" onclick="closeModal()">&larr; Fix Issues</button>
-    <button class="btn-generate" onclick="generateTemplate()">Generate Anyway &rarr;</button>
-  </div>`;
-  return html;
-}
-
-function issueCardHtml(issue, isItemIssue) {
-  const sev = issue.severity === "error" ? "error" : "warning";
-  const loc = isItemIssue
-    ? `Topic ${issue.topic_index} &middot; ${escHtml(issue.topic_title)} &middot; ${issue.item_type === "core" ? "Core" : "Probe"} ${issue.item_index + 1}`
-    : "";
-  const textLine = isItemIssue
-    ? `<div class="issue-text">&ldquo;${escHtml(issue.text)}&rdquo;</div>` : "";
-  const suggestion = issue.suggestion
-    ? `<div class="issue-suggestion"><strong>Suggestion:</strong> ${escHtml(issue.suggestion)}</div>` : "";
-  return `<div class="issue-card ${sev}">
-    <div class="issue-header">
-      <span class="issue-badge ${sev}">${sev === "error" ? "Error" : "Warning"}</span>
-      ${loc ? `<span class="issue-loc">${loc}</span>` : ""}
-    </div>
-    ${textLine}
-    <div class="issue-explanation">${escHtml(issue.explanation)}</div>
-    ${suggestion}
-  </div>`;
+  await generateTemplate();
 }
 
 async function generateTemplate() {
-  const reviewEl = document.getElementById("modal-review");
-  const templateEl = document.getElementById("modal-template");
   const outputEl = document.getElementById("template-output");
   const titleEl = document.getElementById("modal-title");
 
   titleEl.textContent = "Exported Template";
-  reviewEl.classList.add("hidden");
-  templateEl.classList.remove("hidden");
   outputEl.textContent = "Generating template…";
 
   try {
