@@ -17,6 +17,9 @@ with open(os.path.join(BASE_DIR, "prompts", "gathering.txt")) as f:
 with open(os.path.join(BASE_DIR, "prompts", "review.txt")) as f:
     REVIEW_PROMPT = f.read()
 
+with open(os.path.join(BASE_DIR, "prompts", "fixer.txt")) as f:
+    FIXER_PROMPT = f.read()
+
 conversation_history = []
 
 GATHERING_TOOLS = [
@@ -169,6 +172,50 @@ REVIEW_TOOL = {
         "required": ["overall", "item_issues", "structural_issues"]
     }
 }
+
+FIXER_TOOLS = [t for t in GATHERING_TOOLS if t["name"] == "add_topic"]
+
+
+def _run_review(sections: dict) -> dict:
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=2048,
+        system=REVIEW_PROMPT,
+        tools=[REVIEW_TOOL],
+        tool_choice={"type": "any"},
+        messages=[{
+            "role": "user",
+            "content": f"Review this interview template:\n\n{json.dumps(sections, indent=2)}"
+        }]
+    )
+    for block in response.content:
+        if block.type == "tool_use" and block.name == "submit_review":
+            return block.input
+    raise ValueError("reviewer returned no tool call")
+
+
+def _run_fixer(sections: dict, item_issues: list) -> list:
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=2048,
+        system=FIXER_PROMPT,
+        tools=FIXER_TOOLS,
+        tool_choice={"type": "auto"},
+        messages=[{
+            "role": "user",
+            "content": (
+                f"Here is the current template:\n\n{json.dumps(sections, indent=2)}\n\n"
+                f"Here are the specific items that need fixing:\n\n"
+                f"{json.dumps(item_issues, indent=2)}\n\n"
+                "Fix only the flagged items. Preserve all other items exactly as they are."
+            )
+        }]
+    )
+    updates = []
+    for block in response.content:
+        if block.type == "tool_use" and block.name == "add_topic":
+            updates.append(process_tool_call("add_topic", block.input))
+    return updates
 
 
 def build_settings_context(settings):
@@ -385,30 +432,20 @@ def reset():
     return jsonify({"ok": True})
 
 
-@app.route("/review", methods=["POST"])
-def review_route():
+@app.route("/polish", methods=["POST"])
+def polish_route():
     body = request.get_json(silent=True) or {}
     sections = body.get("sections", {})
     try:
-        response = client.messages.create(
-            model=MODEL,
-            max_tokens=2048,
-            system=REVIEW_PROMPT,
-            tools=[REVIEW_TOOL],
-            tool_choice={"type": "any"},
-            messages=[{
-                "role": "user",
-                "content": f"Review this interview template:\n\n{json.dumps(sections, indent=2)}"
-            }]
-        )
-        for block in response.content:
-            if block.type == "tool_use" and block.name == "submit_review":
-                return jsonify(block.input)
-        logging.warning("review_route: API returned no submit_review tool call")
-        return jsonify({"error": "reviewer returned no tool call"}), 500
+        review = _run_review(sections)
+        fixable = [i for i in review.get("item_issues", []) if i.get("suggestion")]
+        if not fixable:
+            return jsonify({"updates": []})
+        updates = _run_fixer(sections, fixable)
+        return jsonify({"updates": updates})
     except Exception as e:
         traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"updates": []})
 
 
 if __name__ == "__main__":

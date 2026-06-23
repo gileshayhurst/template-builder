@@ -206,3 +206,33 @@ def test_format_template_pacing_groups():
     assert "- **The Finish Line** H\n\n\n\n# Main Interview Guide" in result
     # One blank line between do_not_rush and core_vs_probe group
     assert "- **Do Not Rush** A\n\n- **Core vs. Probe:**" in result
+
+
+from unittest.mock import patch, MagicMock
+from app import app as flask_app
+
+
+def _make_review_response(overall="pass", item_issues=None, structural_issues=None):
+    """Build a fake Anthropic response that looks like a submit_review tool call."""
+    tool_block = MagicMock()
+    tool_block.type = "tool_use"
+    tool_block.name = "submit_review"
+    tool_block.input = {
+        "overall": overall,
+        "item_issues": item_issues or [],
+        "structural_issues": structural_issues or [],
+    }
+    resp = MagicMock()
+    resp.content = [tool_block]
+    return resp
+
+
+def test_polish_no_fixable_issues_returns_empty():
+    """When review finds no item issues with suggestions, /polish returns {updates: []}."""
+    flask_app.config["TESTING"] = True
+    with flask_app.test_client() as c:
+        with patch("app.client.messages.create",
+                   return_value=_make_review_response(overall="pass")):
+            resp = c.post("/polish", json={"sections": {}})
+    assert resp.status_code == 200
+    assert resp.get_json() == {"updates": []}
