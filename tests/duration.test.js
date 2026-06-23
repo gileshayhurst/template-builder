@@ -18,9 +18,9 @@ test('estimateDurationFor matches known values across depths', () => {
     expansion: ['a', 'b'],
     focus: 'x',
   };
-  assert.strictEqual(D.estimateDurationFor(sections, 50), 4);  // factor 1.0
-  assert.strictEqual(D.estimateDurationFor(sections, 100), 7); // factor 1.8
-  assert.strictEqual(D.estimateDurationFor(sections, 0), 3);   // factor 0.65
+  assert.strictEqual(D.estimateDurationFor(sections, 50), 3);  // factor 1.0
+  assert.strictEqual(D.estimateDurationFor(sections, 100), 6); // factor 1.8
+  assert.strictEqual(D.estimateDurationFor(sections, 0), 2);   // factor 0.65
 });
 
 test('estimateDurationFor returns floor of 2 for empty topics', () => {
@@ -122,10 +122,10 @@ test('topicMinutes: richer topic at depth 75', () => {
     core: [{ priority: 5 }, { priority: 4 }, { priority: 3 }],
     probe: [{ priority: 3 }, { priority: 2 }],
   };
-  // raw = 0.8*1.25 + 0.2*1.25 + 0.2*1.0 + 0.1*1.0 + 0.1*0.75
-  //     = 1.0 + 0.25 + 0.2 + 0.1 + 0.075 = 1.625
+  // raw = 0.55*1.25 + 0.14*1.25 + 0.14*1.0 + 0.07*1.0 + 0.07*0.75
+  //     = 0.6875 + 0.175 + 0.14 + 0.07 + 0.0525 = 1.125
   // depthFactor(75) = 1.0 + (25/50)*0.8 = 1.4
-  // round(1.625*1.4) = round(2.275) = 2
+  // round(1.125*1.4) = round(1.575) = 2
   assert.strictEqual(D.topicMinutes(topic, 75), 2);
 });
 
