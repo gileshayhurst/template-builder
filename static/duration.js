@@ -19,10 +19,10 @@
     if (topics.length === 0) return 2;
     let raw = 0;
     for (const t of topics) {
-      raw += 0.8 * priorityFactor(t.priority ?? 3);
+      raw += 0.55 * priorityFactor(t.priority ?? 3);
       const core = t.core || [];
-      for (let i = 1; i < core.length; i++) raw += 0.2 * priorityFactor(core[i].priority ?? 3);
-      for (const p of (t.probe || [])) raw += 0.1 * priorityFactor(p.priority ?? 3);
+      for (let i = 1; i < core.length; i++) raw += 0.14 * priorityFactor(core[i].priority ?? 3);
+      for (const p of (t.probe || [])) raw += 0.07 * priorityFactor(p.priority ?? 3);
     }
     raw += 0.5;
     raw += ((sections.expansion || []).length) * 0.2;
@@ -86,9 +86,9 @@
   function topicMinutes(topic, depthValue) {
     const core  = topic.core  || [];
     const probe = topic.probe || [];
-    let raw = 0.8 * priorityFactor(topic.priority ?? 3);
-    for (let i = 1; i < core.length; i++) raw += 0.2 * priorityFactor(core[i].priority ?? 3);
-    for (const p of probe) raw += 0.1 * priorityFactor(p.priority ?? 3);
+    let raw = 0.55 * priorityFactor(topic.priority ?? 3);
+    for (let i = 1; i < core.length; i++) raw += 0.14 * priorityFactor(core[i].priority ?? 3);
+    for (const p of probe) raw += 0.07 * priorityFactor(p.priority ?? 3);
     return Math.max(1, Math.round(raw * depthFactorFor(depthValue)));
   }
 

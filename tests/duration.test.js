@@ -36,7 +36,7 @@ test('over target: removes the lowest-priority topic first', () => {
     ],
     expansion: [], focus: '',
   };
-  // est at depth 100 = 6 min; target 2 -> 4 min over.
+  // est at depth 100 = 5 min; target 2 -> 3 min over.
   const s = D.generateSuggestions(sections, 2, 100);
   assert.ok(s.length > 0);
   assert.strictEqual(s[0].type, 'remove_topic');
@@ -68,7 +68,7 @@ test('under target: every suggestion deltaMin equals the actual bar change', () 
   // add_topic's raw delta (~0.52) rounds up but the displayed bar does not move —
   // exactly the case where deltaMin must track the bar, not the raw difference.
   const depth = 0;
-  const before = D.estimateDurationFor(sections, depth); // 3
+  const before = D.estimateDurationFor(sections, depth); // 2
   const s = D.generateSuggestions(sections, 20, depth);
   assert.ok(s.length > 0);
   for (const c of s) {
@@ -106,13 +106,13 @@ test('applySuggestion is pure (does not mutate input)', () => {
 
 test('topicMinutes: single core at priority 3, depth 50 → 1 min', () => {
   const topic = { priority: 3, core: [{ priority: 3 }], probe: [] };
-  // raw = 0.8*1.0 = 0.8; depth50 factor = 1.0; round(0.8)=1; max(1,1)=1
+  // raw = 0.55*1.0 = 0.55; depth50 factor = 1.0; round(0.55)=1; max(1,1)=1
   assert.strictEqual(D.topicMinutes(topic, 50), 1);
 });
 
 test('topicMinutes: min 1 even for priority-1 topic at depth 0', () => {
   const topic = { priority: 1, core: [{ priority: 1 }], probe: [] };
-  // raw = 0.8*0.5=0.4; depth0 factor=0.65; round(0.26)=0; max(1,0)=1
+  // raw = 0.55*0.5=0.275; depth0 factor=0.65; round(0.179)=0; max(1,0)=1
   assert.strictEqual(D.topicMinutes(topic, 0), 1);
 });
 
