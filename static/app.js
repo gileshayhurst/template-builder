@@ -850,6 +850,7 @@ async function polishTemplate() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sections: state.sections })
     });
+    if (!resp.ok) throw new Error(`Polish failed: ${resp.status}`);
     const data = await resp.json();
     for (const update of (data.updates || [])) {
       applyUpdate(update);
