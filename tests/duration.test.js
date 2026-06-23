@@ -64,8 +64,8 @@ test('under target: every suggestion deltaMin equals the actual bar change', () 
     ],
     expansion: [], focus: '',
   };
-  // depth 0 puts the estimate (3 min) near a rounding boundary, where
-  // add_topic's raw delta (~0.52) rounds up but the displayed bar does not move —
+  // depth 0 puts the estimate (2 min) near a rounding boundary, where
+  // add_topic's raw delta (~0.36) rounds up but the displayed bar does not move —
   // exactly the case where deltaMin must track the bar, not the raw difference.
   const depth = 0;
   const before = D.estimateDurationFor(sections, depth); // 2
