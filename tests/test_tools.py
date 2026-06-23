@@ -210,7 +210,6 @@ def test_format_template_pacing_groups():
     assert "- **Do Not Rush** A\n\n- **Core vs. Probe:**" in result
 
 
-
 def _make_review_response(overall="pass", item_issues=None, structural_issues=None):
     """Build a fake Anthropic response that looks like a submit_review tool call."""
     tool_block = MagicMock()

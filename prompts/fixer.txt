@@ -16,3 +16,4 @@ Your job is to apply targeted rewrites to exactly the flagged items and nothing 
 `item_index` in the issues list is 0-based within its type (core or probe).
 So `item_type: "core", item_index: 2` refers to `topics[topic_index - 1].core[2]`.
 `topic_index` is 1-based.
+
