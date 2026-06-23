@@ -5,7 +5,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 import pytest
+from unittest.mock import patch, MagicMock
 from app import process_tool_call, format_template
+from app import app as flask_app
 
 
 def test_update_metadata():
@@ -207,9 +209,6 @@ def test_format_template_pacing_groups():
     # One blank line between do_not_rush and core_vs_probe group
     assert "- **Do Not Rush** A\n\n- **Core vs. Probe:**" in result
 
-
-from unittest.mock import patch, MagicMock
-from app import app as flask_app
 
 
 def _make_review_response(overall="pass", item_issues=None, structural_issues=None):

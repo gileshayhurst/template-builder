@@ -197,10 +197,10 @@ def _run_review(sections: dict) -> dict:
 def _run_fixer(sections: dict, item_issues: list) -> list:
     response = client.messages.create(
         model=MODEL,
-        max_tokens=2048,
+        max_tokens=4096,
         system=FIXER_PROMPT,
         tools=FIXER_TOOLS,
-        tool_choice={"type": "auto"},
+        tool_choice={"type": "any"},
         messages=[{
             "role": "user",
             "content": (
