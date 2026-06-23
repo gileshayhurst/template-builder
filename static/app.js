@@ -113,7 +113,7 @@ function updateDurationDisplay() {
   if (targetFill) targetFill.style.width = targetPct.toFixed(1) + "%";
   if (estimateFill) estimateFill.style.width = estimatePct.toFixed(1) + "%";
   if (targetLabelEl) targetLabelEl.textContent = targetLabelText;
-  if (estimateLabelEl) estimateLabelEl.textContent = `● Est: ${estimate} min`;
+  if (estimateLabelEl) estimateLabelEl.textContent = `time est. to fully cover content: ${estimate} mins`;
   const coachEl = document.querySelector(".duration-coach");
   if (coachEl) coachEl.innerHTML = coachHtml();
 }
@@ -388,7 +388,7 @@ function renderSettingsStrip() {
         <div class="settings-control-label">Interview Duration</div>
         <div class="duration-labels">
           <span class="duration-label-target">${escHtml(targetLabelText)}</span>
-          <span class="duration-label-estimate">● Est: ${estimate} min</span>
+          <span class="duration-label-estimate">time est. to fully cover content: ${estimate} mins</span>
         </div>
         <div class="duration-tracks">
           <div class="duration-track">
