@@ -24,24 +24,24 @@ const PACING_LABELS = {
 
 const PACING_DEPTH_PRESETS = {
   breadth: {
-    do_not_rush: "Keep the conversation moving. If a participant gives a brief answer and the response is clear, accept it and move on. Use probes only when an answer is unclear or incomplete.",
+    do_not_rush: "Keep the conversation moving. If a participant gives a brief answer and the response is clear, accept it and move on. Use probes only when an answer is thin or unclear.",
     core_vs_probe: "Treat [Core] points as must-ask items. Skip most [Probe] points unless they arise naturally. Prioritise covering all topics over depth in any one area.",
     one_ask_per_turn: "Each turn should contain exactly one question. Do not combine follow-up questions or add sub-questions.",
     keep_light: "Keep questions short and easy to answer. Avoid anything that requires extended reflection.",
     follow_signals: "When something interesting emerges, note it briefly and return immediately to the guide. Do not follow tangents.",
     original_followups: "Stick closely to the interview guide. Only ask questions not in the guide when explicitly necessary to clarify something.",
     selective_probing: "Use probes sparingly. Prefer moving to the next topic over dwelling on the current one.",
-    finish_line: "Reaching the end of the Main Interview Guide signals the end of the interview. If a few minutes remain, close warmly. Do not pivot to Expansion Topics."
+    finish_line: "Reaching the end of the Main Interview Guide signals the end of the interview. Begin closing warmly. If remaining_minutes is 5 or more, you may briefly revisit one topic that felt thin. Do not pivot to Expansion Topics."
   },
   slightly_broad: {
     do_not_rush: "Keep the conversation flowing. Use probes when an answer seems incomplete, but do not linger. Accept brief answers for straightforward questions.",
     core_vs_probe: "Treat [Core] points as priorities. Use [Probe] points selectively — when an answer is thin or a topic clearly needs more colour.",
-    one_ask_per_turn: "Each turn should usually contain one main question. You may add a second only when it flows naturally from the first answer.",
+    one_ask_per_turn: "Each turn should usually contain one main question. You may add a second only when it is tightly related and easy to answer in the same breath.",
     keep_light: "Avoid long or overloaded questions. Do not combine a broad main question with a list of sub-questions in the same turn.",
     follow_signals: "When something specific or emotional emerges, follow it with one brief follow-up, then return to the guide.",
     original_followups: "You may ask original follow-up questions when they would clearly deepen understanding. Keep them brief.",
     selective_probing: "Use follow-up probes selectively. Prefer coverage over depth when time is limited.",
-    finish_line: "Reaching the end of the Main Interview Guide does not necessarily signal the end of the interview. If time remains, revisit one interesting moment briefly before closing."
+    finish_line: "Reaching the end of the Main Interview Guide does not signal the end of the interview. If remaining_minutes is 5 or more, use one of these options to fill the time:\n  1. Circle Back: Revisit an earlier interesting moment to draw out a little more detail.\n  2. Expansion: Lightly touch on one Expansion Topic if it fits the conversation.\nClose warmly once remaining_minutes is 3 or less."
   },
   balanced: { ...PACING_DEFAULTS },
   slightly_deep: {
@@ -50,9 +50,9 @@ const PACING_DEPTH_PRESETS = {
     one_ask_per_turn: "Each turn should usually contain one main question. You may combine a second when it is tightly related, easy to answer in the same thought, and not from a different part of the story.",
     keep_light: "Avoid long or overloaded questions. Do not combine a broad main question with a list of sub-questions in the same turn.",
     follow_signals: "When something specific, emotional, surprising, or contradictory emerges, follow it — ask a clarifying or deepening question — then return to the guide.",
-    original_followups: "Ask original follow-up questions when they would help uncover better insight. Good intuition is an asset here.",
+    original_followups: "Ask original follow-up questions when they would help uncover better insight. Lean into moments that feel rich, unresolved, or surprising.",
     selective_probing: "Use probes thoughtfully. When an answer feels thin or opens a door, follow it. Do not skip probes by default.",
-    finish_line: "Reaching the end of the Main Interview Guide does not signal the end of the interview. Use Circle Back and Expansion Topics to fill remaining time until remaining_minutes is 3 or less."
+    finish_line: "Reaching the end of the Main Interview Guide does not signal the end of the interview. Use the following to fill remaining time until remaining_minutes is 3 or less:\n  1. Circle Back: Revisit an earlier interesting moment to ask for thicker description — a specific emotion, a sensory detail, or the deeper why.\n  2. Expansion: Pivot to the Expansion Topics at the bottom of the plan."
   },
   deep: {
     do_not_rush: "Prioritize depth over coverage. If the participant gives brief answers, use every available [Probe] point to unlock detail. Never accept a thin answer when a richer one is possible.",
@@ -62,7 +62,7 @@ const PACING_DEPTH_PRESETS = {
     follow_signals: "When something specific, emotional, surprising, or contradictory emerges, follow it fully. Ask multiple deepening questions before returning to the guide. These moments often yield the richest insight.",
     original_followups: "Actively ask original follow-up questions not in the guide whenever they would surface deeper understanding. Treat the guide as a floor, not a ceiling.",
     selective_probing: "Use every relevant probe. Probes are not optional tools — they are the primary mechanism for achieving depth. Only skip a probe if the participant has already fully addressed it.",
-    finish_line: "Reaching the end of the Main Interview Guide does not signal the end of the interview. You must use Circle Back and Expansion Topics to fill the time until remaining_minutes is 3 or less. Circle Back is particularly important at this depth — revisit every moment that had depth potential and push for sensory detail, specific emotions, and deeper explanation."
+    finish_line: "Reaching the end of the Main Interview Guide does not signal the end of the interview. You must use the following to fill the time until remaining_minutes is 3 or less:\n  1. Circle Back: Revisit every moment that had depth potential. Push for sensory detail, specific emotions, and the deeper why behind what they shared. This is the primary tool at this depth.\n  2. Expansion: Pivot to the Expansion Topics at the bottom of the plan."
   }
 };
 
@@ -113,7 +113,7 @@ function updateDurationDisplay() {
   if (targetFill) targetFill.style.width = targetPct.toFixed(1) + "%";
   if (estimateFill) estimateFill.style.width = estimatePct.toFixed(1) + "%";
   if (targetLabelEl) targetLabelEl.textContent = targetLabelText;
-  if (estimateLabelEl) estimateLabelEl.textContent = `time est. to fully cover content: ${estimate} mins`;
+  if (estimateLabelEl) estimateLabelEl.textContent = `Time estimated to cover content: ${estimate} mins`;
   const coachEl = document.querySelector(".duration-coach");
   if (coachEl) coachEl.innerHTML = coachHtml();
 }
@@ -388,7 +388,7 @@ function renderSettingsStrip() {
         <div class="settings-control-label">Interview Duration</div>
         <div class="duration-labels">
           <span class="duration-label-target">${escHtml(targetLabelText)}</span>
-          <span class="duration-label-estimate">time est. to fully cover content: ${estimate} mins</span>
+          <span class="duration-label-estimate">Time estimated to cover content: ${estimate} mins</span>
         </div>
         <div class="duration-tracks">
           <div class="duration-track">
