@@ -49,3 +49,35 @@ def test_prompt_has_settings_awareness():
     assert "ui settings awareness" in text
     assert "flag" in text
     assert "25%" in text
+
+
+def test_prompt_has_no_typical_framing_rule():
+    text = _prompt_text()
+    assert "no \"typical\" framing" in text
+
+
+def test_prompt_has_scope_to_slice_rule():
+    assert "scope to a slice" in _prompt_text()
+
+
+def test_prompt_has_no_comparison_as_core_rule():
+    assert "no comparison-as-core" in _prompt_text()
+
+
+def test_prompt_anti_patterns_include_typical_framing():
+    assert "typical commute / typical day" in _prompt_text()
+
+
+def test_prompt_anti_patterns_include_high_altitude_scope():
+    assert "overall impression / from start to finish" in _prompt_text()
+
+
+def test_prompt_anti_patterns_include_comparison_trap():
+    assert "how does x compare to y" in _prompt_text()
+
+
+def test_prompt_worked_example_has_before_after_pairs():
+    text = _prompt_text()
+    assert "\"typical\" trap" in text
+    assert "high-altitude scope" in text
+    assert "comparison trap" in text
