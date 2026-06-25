@@ -4,6 +4,7 @@ import os
 import traceback
 from flask import Flask, request, Response, render_template, jsonify
 import anthropic
+import retrieve
 from config import ANTHROPIC_API_KEY, MODEL, PORT
 
 app = Flask(__name__)
@@ -335,18 +336,30 @@ def process_tool_call(name, input_data):
         raise ValueError(f"Unknown tool: {name}")
 
 
-def stream_conversation(new_message, system=None):
+def stream_conversation(new_message, system=None, retrieved_block=None):
     if system is None:
         system = GATHERING_PROMPT
     conversation_history.append({"role": "user", "content": new_message})
 
     while True:
+        if retrieved_block:
+            # Inject grounding into the current user turn for THIS call only.
+            # Not persisted to conversation_history (would bloat history and go
+            # stale next turn). Appended after the cached prefix -> cache-safe.
+            messages = conversation_history[:-1] + [{
+                "role": "user",
+                "content": conversation_history[-1]["content"] + "\n\n" + retrieved_block,
+            }]
+            retrieved_block = None  # inject once, on the first model call of the turn
+        else:
+            messages = list(conversation_history)
+
         with client.messages.stream(
             model=MODEL,
             max_tokens=4096,
             system=system,
             tools=GATHERING_TOOLS,
-            messages=conversation_history
+            messages=messages
         ) as stream:
             for text in stream.text_stream:
                 yield f"event: chat_token\ndata: {json.dumps(text)}\n\n"
@@ -385,11 +398,13 @@ def chat():
     data = request.json
     message = data["message"]
     settings = data.get("settings", {})
+    sections = data.get("sections", {})
     settings_context = build_settings_context(settings)
     system = GATHERING_PROMPT + settings_context
+    retrieved_block = retrieve.retrieve_context(sections, message)
     def safe_stream():
         try:
-            yield from stream_conversation(message, system)
+            yield from stream_conversation(message, system, retrieved_block)
         except Exception as e:
             traceback.print_exc()
             yield f"event: error\ndata: {json.dumps(type(e).__name__ + ': ' + str(e))}\n\n"
