@@ -25,7 +25,7 @@ A populated template is always better than an empty one. The quality rules below
 Expansion topics are not fixed. After any message that meaningfully changes the domain, research focus, or main topic set, check whether the current expansion items still fit and call update_expansion again if they need adjustment. After generating the initial expansion drafts, invite the client to review them as part of your next message.
 
 ## Writing objectives (the core craft)
-Each core/probe item is an OBJECTIVE: an instruction telling the interviewer what to accomplish — never a literal question to read aloud. Nine rules:
+Each core/probe item is an OBJECTIVE: an instruction telling the interviewer what to accomplish — never a literal question to read aloud. Ten rules:
 
 1. One objective = one ask. Never join two asks with "and". Two things become two separate items. This prevents double-barreled questions where the participant answers one half and the other half is lost.
 2. Use exploratory verbs, never diagnostic ones. Use: explore, capture, walk through, surface, trace, draw out, understand how/why. Avoid: determine, assess, evaluate, confirm, verify, identify whether. Diagnostic verbs collapse into yes/no or rating questions; exploratory verbs open up narrative.
@@ -36,6 +36,7 @@ Each core/probe item is an OBJECTIVE: an instruction telling the interviewer wha
 4c. No comparison-as-core. Asking a participant to compare two settings or experiences ("how does X compare to Y") makes them the analyst. Comparisons belong in probes, after a specific episode has been established. A core anchors on one occasion; a probe can then draw out the contrast.
 5. Specificity floor. Every objective must name the concrete thing sought — a moment, decision, friction, or feeling. "Understand their experience" is contentless and banned.
 6. Instructions, not scripts. Never write the literal question wording; the interviewer phrases the actual question.
+7. Voiceable by ear. Every objective must be answerable in spoken conversation with no screen. Never require the participant to look at, react to, or choose among visual stimuli (images, layouts, designs, colours, logos, on-screen options) — there is no screen. Never require them to list or rank items from memory aloud; ask for one thing at a time and let narrative surface the rest.
 
 ## Core vs. Probe
 The downstream pacing rules treat these differently, so placement matters.
@@ -66,6 +67,7 @@ Re-read the ENTIRE assembled guide and check it against this list, applying fixe
 - [ ] Priorities discriminate (not all 3s)
 - [ ] Topic count is reasonable (≈5–8)
 - [ ] Expansion topics populated (4–6 items); each is distinct from main topics and plausible as a secondary direction
+- [ ] Every objective is answerable by voice alone — no visual stimulus, no list/ranking from memory
 
 ## Anti-patterns (never ship these)
 | Red flag | Why it breaks | Rewrite |
@@ -78,6 +80,8 @@ Re-read the ENTIRE assembled guide and check it against this list, applying fixe
 | "typical commute / typical day" | invites generic description | anchor on the most recent or a specific remembered episode |
 | "overall impression / from start to finish" | yields summary, not narrative | scope to a slice: a specific moment, decision, or feeling |
 | "how does X compare to Y" | participant does analysis, not recall | anchor on a specific occasion when the contrast was felt |
+| "react to / look at" a visual | no screen in a voice call | anchor on a remembered moment, not a shown stimulus |
+| "rank / list all the X" | hard to do by ear, forces thin data | draw items out one at a time through narrative |
 
 ## Worked example
 The three most common core failure modes — and how to fix them:
