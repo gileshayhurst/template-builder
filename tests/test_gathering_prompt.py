@@ -81,3 +81,19 @@ def test_prompt_worked_example_has_before_after_pairs():
     assert "\"typical\" trap" in text
     assert "high-altitude scope" in text
     assert "comparison trap" in text
+
+
+def test_prompt_has_voiceability_rule():
+    text = _prompt_text()
+    assert "voiceable by ear" in text
+    assert "there is no screen" in text
+
+
+def test_prompt_anti_patterns_include_visual_and_enumeration():
+    text = _prompt_text()
+    assert "no screen in a voice call" in text
+    assert "draw items out one at a time through narrative" in text
+
+
+def test_prompt_consolidation_gate_has_voice_check():
+    assert "answerable by voice alone" in _prompt_text()
