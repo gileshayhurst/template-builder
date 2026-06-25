@@ -244,6 +244,7 @@ body {
 }
 .hidden { display: none !important; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; }
+#modal-template { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 16px; }
 .modal-header h2 { font-size: 16px; }
 .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #888; }
 .modal-close:hover { color: #333; }
