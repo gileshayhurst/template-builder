@@ -345,7 +345,8 @@ def stream_conversation(new_message, system=None, retrieved_block=None):
         if retrieved_block:
             # Inject grounding into the current user turn for THIS call only.
             # Not persisted to conversation_history (would bloat history and go
-            # stale next turn). Appended after the cached prefix -> cache-safe.
+            # stale next turn). Appended to the last turn, so it disturbs no
+            # earlier-message prefix.
             messages = conversation_history[:-1] + [{
                 "role": "user",
                 "content": conversation_history[-1]["content"] + "\n\n" + retrieved_block,
