@@ -109,6 +109,8 @@ def _has_domain(sections):
 
 
 def select_entries(query, catalog):
+    if not catalog:
+        return []
     resp = client.messages.create(
         model=HAIKU_MODEL,
         max_tokens=512,

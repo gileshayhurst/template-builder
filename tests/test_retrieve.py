@@ -124,6 +124,19 @@ def test_select_entries_caps_at_5():
     assert len(ids) == 5
 
 
+def test_select_entries_filters_non_strings():
+    with patch("retrieve.client") as mc:
+        mc.messages.create.return_value = _tool_resp([1, "craft-a", None, "cov-b"])
+        ids = retrieve.select_entries("q", "c")
+    assert ids == ["craft-a", "cov-b"]
+
+
+def test_select_entries_empty_catalog_skips_api_call():
+    with patch("retrieve.client") as mc:
+        assert retrieve.select_entries("q", "") == []
+        mc.messages.create.assert_not_called()
+
+
 def test_select_entries_no_tool_use_returns_empty():
     text_block = MagicMock()
     text_block.type = "text"
