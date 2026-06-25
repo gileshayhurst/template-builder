@@ -46,3 +46,54 @@ def test_real_corpus_loads_nonempty():
     assert len(corpus) >= 8
     assert all(e["type"] in ("craft", "coverage") for e in corpus)
     assert len({e["id"] for e in corpus}) == len(corpus)  # ids unique
+
+
+def test_build_catalog_format():
+    corpus = [
+        {"id": "craft-a", "type": "craft", "tags": ["t1", "t2"], "note": "split asks"},
+        {"id": "cov-b", "type": "coverage", "domain_tags": ["grocery"], "note": "dims"},
+    ]
+    cat = retrieve.build_catalog(corpus)
+    assert "[craft-a] (craft) t1,t2 :: split asks" in cat
+    assert "[cov-b] (coverage) grocery :: dims" in cat
+
+
+def test_build_query_assembles_context():
+    sections = {
+        "metadata": {"title": "Grocery Study"},
+        "focus": "most recent visit",
+        "topics": [{"title": "Arrival"}, {"title": "Checkout"}],
+    }
+    q = retrieve.build_query(sections, "I want to explore checkout")
+    assert "Grocery Study" in q
+    assert "most recent visit" in q
+    assert "Arrival" in q and "Checkout" in q
+    assert "I want to explore checkout" in q
+
+
+def test_assemble_block_renders_chosen_entries():
+    corpus = [
+        {"id": "craft-a", "type": "craft", "rule": "one_ask", "bad": "B", "good": "G", "note": "N"},
+        {"id": "cov-b", "type": "coverage", "domain_tags": ["grocery"],
+         "dimensions": ["arrival", "checkout"], "note": "anchor"},
+        {"id": "unused", "type": "craft", "bad": "x", "good": "y"},
+    ]
+    block = retrieve.assemble_block(corpus, ["craft-a", "cov-b"])
+    assert block.startswith("<grounding>")
+    assert block.rstrip().endswith("</grounding>")
+    assert "B" in block and "G" in block          # craft bad/good
+    assert "arrival; checkout" in block            # coverage dimensions
+    assert "y" not in block                         # unused entry not rendered
+
+
+def test_assemble_block_empty_returns_empty_string():
+    assert retrieve.assemble_block([{"id": "a", "type": "craft"}], []) == ""
+    assert retrieve.assemble_block([{"id": "a", "type": "craft"}], ["missing"]) == ""
+
+
+def test_has_domain():
+    assert retrieve._has_domain({"metadata": {"title": "X"}, "topics": []}) is True
+    assert retrieve._has_domain({"metadata": {"title": ""}, "topics": [{"title": "T"}]}) is True
+    assert retrieve._has_domain({"metadata": {"title": ""}, "topics": []}) is False
+    assert retrieve._has_domain({}) is False
+    assert retrieve._has_domain(None) is False
