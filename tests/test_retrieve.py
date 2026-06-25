@@ -178,3 +178,54 @@ def test_retrieve_context_none_on_exception(monkeypatch):
     with patch("retrieve.client") as mc:
         mc.messages.create.side_effect = RuntimeError("boom")
         assert retrieve.retrieve_context({"metadata": {"title": "Grocery"}}, "hi") is None
+
+
+ARCHETYPE_IDS = {
+    "coverage-archetype-physical-place-01",
+    "coverage-archetype-service-encounter-01",
+    "coverage-archetype-app-session-01",
+    "coverage-archetype-media-session-01",
+    "coverage-archetype-routine-transition-01",
+    "coverage-archetype-decision-journey-01",
+    "coverage-archetype-onboarding-01",
+    "coverage-archetype-support-resolution-01",
+}
+
+
+def test_archetype_entries_present():
+    ids = {e["id"] for e in retrieve.load_corpus()}
+    assert ARCHETYPE_IDS <= ids
+
+
+def test_all_coverage_entries_have_archetype_and_dimensions():
+    cov = [e for e in retrieve.load_corpus() if e["type"] == "coverage"]
+    assert len(cov) >= 13
+    for e in cov:
+        assert e.get("archetype"), f"{e['id']} missing archetype"
+        assert e.get("dimensions"), f"{e['id']} missing dimensions"
+
+
+def test_build_catalog_includes_archetype():
+    corpus = [{"id": "cov-x", "type": "coverage", "archetype": "physical place visit",
+               "domain_tags": ["store"], "note": "n"}]
+    cat = retrieve.build_catalog(corpus)
+    assert "<physical place visit>" in cat
+    assert "[cov-x] (coverage)" in cat
+
+
+def test_build_catalog_no_archetype_unchanged():
+    corpus = [{"id": "craft-a", "type": "craft", "tags": ["t1"], "note": "x"}]
+    assert retrieve.build_catalog(corpus) == "[craft-a] (craft) t1 :: x"
+
+
+def test_assemble_block_labels_archetype():
+    corpus = [{"id": "cov-x", "type": "coverage", "archetype": "physical place visit",
+               "domain_tags": ["store"], "dimensions": ["arrival", "leaving"], "note": "specialize"}]
+    block = retrieve.assemble_block(corpus, ["cov-x"])
+    assert "- Coverage (physical place visit):" in block
+    assert "arrival; leaving" in block
+
+
+def test_select_system_mentions_archetype():
+    assert "closest experience archetype" in retrieve.SELECT_SYSTEM
+    assert "angle brackets" in retrieve.SELECT_SYSTEM
