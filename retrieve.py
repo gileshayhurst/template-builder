@@ -71,7 +71,7 @@ def assemble_block(corpus, ids):
     for e in chosen:
         if e["type"] == "craft":
             parts.append(
-                f"- Craft ({e.get('rule', '')}): avoid \"{e['bad']}\" -> prefer \"{e['good']}\". {e.get('note', '')}"
+                f"- Craft ({e.get('rule', '')}): avoid \"{e.get('bad', '')}\" -> prefer \"{e.get('good', '')}\". {e.get('note', '')}"
             )
         else:
             dims = "; ".join(e.get("dimensions", []))
