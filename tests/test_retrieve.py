@@ -178,3 +178,28 @@ def test_retrieve_context_none_on_exception(monkeypatch):
     with patch("retrieve.client") as mc:
         mc.messages.create.side_effect = RuntimeError("boom")
         assert retrieve.retrieve_context({"metadata": {"title": "Grocery"}}, "hi") is None
+
+
+ARCHETYPE_IDS = {
+    "coverage-archetype-physical-place-01",
+    "coverage-archetype-service-encounter-01",
+    "coverage-archetype-app-session-01",
+    "coverage-archetype-media-session-01",
+    "coverage-archetype-routine-transition-01",
+    "coverage-archetype-decision-journey-01",
+    "coverage-archetype-onboarding-01",
+    "coverage-archetype-support-resolution-01",
+}
+
+
+def test_archetype_entries_present():
+    ids = {e["id"] for e in retrieve.load_corpus()}
+    assert ARCHETYPE_IDS <= ids
+
+
+def test_all_coverage_entries_have_archetype_and_dimensions():
+    cov = [e for e in retrieve.load_corpus() if e["type"] == "coverage"]
+    assert len(cov) >= 13
+    for e in cov:
+        assert e.get("archetype"), f"{e['id']} missing archetype"
+        assert e.get("dimensions"), f"{e['id']} missing dimensions"
