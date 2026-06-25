@@ -1,4 +1,5 @@
-import os, json
+import os
+import json
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-key-placeholder")
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -31,3 +32,10 @@ def test_load_corpus_skips_malformed(tmp_path):
            {"type": "craft", "bad": "x", "good": "y"})           # missing id
     corpus = retrieve.load_corpus(str(tmp_path))
     assert [e["id"] for e in corpus] == ["craft-a"]
+
+
+def test_load_corpus_skips_invalid_json(tmp_path):
+    (tmp_path / "craft").mkdir(parents=True)
+    (tmp_path / "craft" / "bad.json").write_text("not json", encoding="utf-8")
+    corpus = retrieve.load_corpus(str(tmp_path))
+    assert corpus == []
