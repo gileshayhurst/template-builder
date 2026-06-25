@@ -18,7 +18,9 @@ SELECT_SYSTEM = (
     "You help a research-interview-design assistant. Given the current draft and a "
     "catalog of guidance entries, choose the 3-5 entries most relevant to improving "
     "the draft right now -- a mix of craft (phrasing) and coverage (missing dimensions) "
-    "when both apply. Call select_entries with their ids. Choose only ids that appear "
+    "when both apply. For coverage, prefer a specific-domain map when one closely fits "
+    "the domain; otherwise pick the closest experience archetype (shown in angle brackets). "
+    "Call select_entries with their ids. Choose only ids that appear "
     "in the catalog; if nothing is relevant, return an empty list."
 )
 
@@ -64,7 +66,9 @@ def build_catalog(corpus):
     lines = []
     for e in corpus:
         tags = ",".join(e.get("tags") or e.get("domain_tags") or [])
-        lines.append(f"[{e['id']}] ({e['type']}) {tags} :: {e.get('note', '')}")
+        arch = e.get("archetype")
+        arch_str = f" <{arch}>" if arch else ""
+        lines.append(f"[{e['id']}] ({e['type']}){arch_str} {tags} :: {e.get('note', '')}")
     return "\n".join(lines)
 
 
@@ -96,7 +100,8 @@ def assemble_block(corpus, ids):
         else:
             dims = "; ".join(e.get("dimensions", []))
             tags = ",".join(e.get("domain_tags", []))
-            parts.append(f"- Coverage ({tags}): ensure dimensions -- {dims}. {e.get('note', '')}")
+            label = e.get("archetype") or tags
+            parts.append(f"- Coverage ({label}): ensure dimensions -- {dims}. {e.get('note', '')}")
     parts.append("</grounding>")
     return "\n".join(parts)
 

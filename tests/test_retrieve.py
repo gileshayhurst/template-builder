@@ -203,3 +203,28 @@ def test_all_coverage_entries_have_archetype_and_dimensions():
     for e in cov:
         assert e.get("archetype"), f"{e['id']} missing archetype"
         assert e.get("dimensions"), f"{e['id']} missing dimensions"
+
+
+def test_build_catalog_includes_archetype():
+    corpus = [{"id": "cov-x", "type": "coverage", "archetype": "physical place visit",
+               "domain_tags": ["store"], "note": "n"}]
+    cat = retrieve.build_catalog(corpus)
+    assert "<physical place visit>" in cat
+    assert "[cov-x] (coverage)" in cat
+
+
+def test_build_catalog_no_archetype_unchanged():
+    corpus = [{"id": "craft-a", "type": "craft", "tags": ["t1"], "note": "x"}]
+    assert retrieve.build_catalog(corpus) == "[craft-a] (craft) t1 :: x"
+
+
+def test_assemble_block_labels_archetype():
+    corpus = [{"id": "cov-x", "type": "coverage", "archetype": "physical place visit",
+               "domain_tags": ["store"], "dimensions": ["arrival", "leaving"], "note": "specialize"}]
+    block = retrieve.assemble_block(corpus, ["cov-x"])
+    assert "physical place visit" in block
+    assert "arrival; leaving" in block
+
+
+def test_select_system_mentions_archetype():
+    assert "archetype" in retrieve.SELECT_SYSTEM
