@@ -14,6 +14,26 @@ CORPUS_DIR = os.path.join(BASE_DIR, "corpus")
 
 HAIKU_MODEL = "claude-haiku-4-5"
 
+SELECT_SYSTEM = (
+    "You help a research-interview-design assistant. Given the current draft and a "
+    "catalog of guidance entries, choose the 3-5 entries most relevant to improving "
+    "the draft right now -- a mix of craft (phrasing) and coverage (missing dimensions) "
+    "when both apply. Call select_entries with their ids. Choose only ids that appear "
+    "in the catalog; if nothing is relevant, return an empty list."
+)
+
+SELECT_TOOL = {
+    "name": "select_entries",
+    "description": "Return the ids of the corpus entries most relevant to the current interview draft.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "entry_ids": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["entry_ids"]
+    }
+}
+
 
 def _valid_entry(e):
     if not isinstance(e, dict) or not e.get("id") or e.get("type") not in ("craft", "coverage"):
@@ -86,6 +106,42 @@ def _has_domain(sections):
     title = (sections.get("metadata") or {}).get("title", "")
     topics = sections.get("topics") or []
     return bool(title) or len(topics) > 0
+
+
+def select_entries(query, catalog):
+    resp = client.messages.create(
+        model=HAIKU_MODEL,
+        max_tokens=512,
+        system=[{
+            "type": "text",
+            "text": SELECT_SYSTEM + "\n\nCATALOG:\n" + catalog,
+            "cache_control": {"type": "ephemeral"},
+        }],
+        tools=[SELECT_TOOL],
+        tool_choice={"type": "tool", "name": "select_entries"},
+        messages=[{"role": "user", "content": query}],
+    )
+    for block in resp.content:
+        if block.type == "tool_use" and block.name == "select_entries":
+            ids = block.input.get("entry_ids", []) or []
+            return [i for i in ids if isinstance(i, str)][:5]
+    return []
+
+
+def retrieve_context(sections, latest_msg):
+    if not RAG_EFFECTIVE:
+        return None
+    if not _has_domain(sections):
+        return None
+    try:
+        catalog = build_catalog(CORPUS)
+        query = build_query(sections, latest_msg)
+        ids = select_entries(query, catalog)
+        block = assemble_block(CORPUS, ids)
+        return block or None
+    except Exception:
+        logging.exception("retrieve_context failed; proceeding without grounding")
+        return None
 
 
 CORPUS = load_corpus()

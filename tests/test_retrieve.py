@@ -98,3 +98,70 @@ def test_has_domain():
     assert retrieve._has_domain({"metadata": {"title": ""}, "topics": []}) is False
     assert retrieve._has_domain({}) is False
     assert retrieve._has_domain(None) is False
+
+
+def _tool_resp(entry_ids):
+    block = MagicMock()
+    block.type = "tool_use"
+    block.name = "select_entries"
+    block.input = {"entry_ids": entry_ids}
+    resp = MagicMock()
+    resp.content = [block]
+    return resp
+
+
+def test_select_entries_parses_ids():
+    with patch("retrieve.client") as mc:
+        mc.messages.create.return_value = _tool_resp(["craft-a", "cov-b"])
+        ids = retrieve.select_entries("query", "catalog")
+    assert ids == ["craft-a", "cov-b"]
+
+
+def test_select_entries_caps_at_5():
+    with patch("retrieve.client") as mc:
+        mc.messages.create.return_value = _tool_resp([f"id{i}" for i in range(10)])
+        ids = retrieve.select_entries("q", "c")
+    assert len(ids) == 5
+
+
+def test_select_entries_no_tool_use_returns_empty():
+    text_block = MagicMock()
+    text_block.type = "text"
+    resp = MagicMock()
+    resp.content = [text_block]
+    with patch("retrieve.client") as mc:
+        mc.messages.create.return_value = resp
+        assert retrieve.select_entries("q", "c") == []
+
+
+def test_retrieve_context_none_when_disabled(monkeypatch):
+    monkeypatch.setattr(retrieve, "RAG_EFFECTIVE", False)
+    assert retrieve.retrieve_context({"metadata": {"title": "Grocery"}}, "hi") is None
+
+
+def test_retrieve_context_none_without_domain(monkeypatch):
+    monkeypatch.setattr(retrieve, "RAG_EFFECTIVE", True)
+    monkeypatch.setattr(retrieve, "CORPUS",
+                        [{"id": "craft-a", "type": "craft", "bad": "x", "good": "y"}])
+    assert retrieve.retrieve_context({"metadata": {"title": ""}, "topics": []}, "hi") is None
+
+
+def test_retrieve_context_returns_block_with_domain(monkeypatch):
+    corpus = [{"id": "craft-a", "type": "craft", "rule": "r", "bad": "BAD", "good": "GOOD", "note": "n"}]
+    monkeypatch.setattr(retrieve, "RAG_EFFECTIVE", True)
+    monkeypatch.setattr(retrieve, "CORPUS", corpus)
+    with patch("retrieve.client") as mc:
+        mc.messages.create.return_value = _tool_resp(["craft-a"])
+        block = retrieve.retrieve_context({"metadata": {"title": "Grocery"}, "topics": []}, "hi")
+    assert block is not None
+    assert "<grounding>" in block
+    assert "BAD" in block and "GOOD" in block
+
+
+def test_retrieve_context_none_on_exception(monkeypatch):
+    monkeypatch.setattr(retrieve, "RAG_EFFECTIVE", True)
+    monkeypatch.setattr(retrieve, "CORPUS",
+                        [{"id": "craft-a", "type": "craft", "bad": "x", "good": "y"}])
+    with patch("retrieve.client") as mc:
+        mc.messages.create.side_effect = RuntimeError("boom")
+        assert retrieve.retrieve_context({"metadata": {"title": "Grocery"}}, "hi") is None
