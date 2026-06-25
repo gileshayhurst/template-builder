@@ -352,7 +352,7 @@ def stream_conversation(new_message, system=None, retrieved_block=None):
             }]
             retrieved_block = None  # inject once, on the first model call of the turn
         else:
-            messages = list(conversation_history)
+            messages = list(conversation_history)  # snapshot; history grows between loop iterations
 
         with client.messages.stream(
             model=MODEL,
