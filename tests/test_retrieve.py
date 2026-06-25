@@ -222,9 +222,10 @@ def test_assemble_block_labels_archetype():
     corpus = [{"id": "cov-x", "type": "coverage", "archetype": "physical place visit",
                "domain_tags": ["store"], "dimensions": ["arrival", "leaving"], "note": "specialize"}]
     block = retrieve.assemble_block(corpus, ["cov-x"])
-    assert "physical place visit" in block
+    assert "- Coverage (physical place visit):" in block
     assert "arrival; leaving" in block
 
 
 def test_select_system_mentions_archetype():
-    assert "archetype" in retrieve.SELECT_SYSTEM
+    assert "closest experience archetype" in retrieve.SELECT_SYSTEM
+    assert "angle brackets" in retrieve.SELECT_SYSTEM
