@@ -73,17 +73,18 @@ def test_build_query_assembles_context():
 
 def test_assemble_block_renders_chosen_entries():
     corpus = [
-        {"id": "craft-a", "type": "craft", "rule": "one_ask", "bad": "B", "good": "G", "note": "N"},
+        {"id": "craft-a", "type": "craft", "rule": "one_ask", "bad": "BADTEXT", "good": "GOODTEXT", "note": "N"},
         {"id": "cov-b", "type": "coverage", "domain_tags": ["grocery"],
          "dimensions": ["arrival", "checkout"], "note": "anchor"},
-        {"id": "unused", "type": "craft", "bad": "x", "good": "y"},
+        {"id": "unused", "type": "craft", "bad": "UNUSEDBAD", "good": "UNUSEDGOOD"},
     ]
     block = retrieve.assemble_block(corpus, ["craft-a", "cov-b"])
     assert block.startswith("<grounding>")
     assert block.rstrip().endswith("</grounding>")
-    assert "B" in block and "G" in block          # craft bad/good
-    assert "arrival; checkout" in block            # coverage dimensions
-    assert "y" not in block                         # unused entry not rendered
+    assert "BADTEXT" in block and "GOODTEXT" in block   # craft bad/good
+    assert "arrival; checkout" in block                  # coverage dimensions
+    assert "grocery" in block                            # coverage domain tags rendered
+    assert "UNUSEDGOOD" not in block                     # unused entry not rendered
 
 
 def test_assemble_block_empty_returns_empty_string():

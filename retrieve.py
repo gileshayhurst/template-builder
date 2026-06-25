@@ -66,7 +66,7 @@ def assemble_block(corpus, ids):
         return ""
     parts = [
         "<grounding>",
-        "Relevant interview-design guidance for this draft. Use it; do not quote it to the client.",
+        "Relevant interview-design guidance for this draft. Apply it; do not quote it to the client.",
     ]
     for e in chosen:
         if e["type"] == "craft":
@@ -75,7 +75,8 @@ def assemble_block(corpus, ids):
             )
         else:
             dims = "; ".join(e.get("dimensions", []))
-            parts.append(f"- Coverage: ensure dimensions -- {dims}. {e.get('note', '')}")
+            tags = ",".join(e.get("domain_tags", []))
+            parts.append(f"- Coverage ({tags}): ensure dimensions -- {dims}. {e.get('note', '')}")
     parts.append("</grounding>")
     return "\n".join(parts)
 
