@@ -39,12 +39,12 @@ Good probe: "Capture any specific moment in the queue that stood out — and wha
 ### requires_visual_stimulus (severity: error)
 The item requires the participant to see, look at, react to, or choose among something visual (an image, screen, layout, design, colour, logo, or on-screen option). The interview is voice-only — there is no screen, so the agent cannot execute this.
 Bad: "Explore the participant's reaction to the homepage layout"
-Good: "Trace a recent moment the participant tried to find something on the site and what happened"
+Good: "Trace the last time the participant tried to find something on the site and what happened"
 
 ### enumeration_or_ranking (severity: warning)
-The item asks the participant to list many items, or rank/order items, from memory and aloud. By ear this overloads recall and forces thin, artificial answers. Draw items out one at a time through narrative instead.
+The item asks the participant to list items, or rank/order items, from memory and aloud. By ear this overloads recall and forces thin, artificial answers. Draw items out one at a time through narrative instead.
 Bad: "Have the participant rank the five factors that matter most when choosing a brand"
-Good: "Surface what mattered most the last time the participant chose a brand, and why"
+Good: "Surface what mattered most the last time the participant chose a brand"
 
 ## Structural checks (add to structural_issues)
 
