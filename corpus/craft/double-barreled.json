@@ -1,0 +1,1 @@
+{"id": "craft-double-barreled-01", "type": "craft", "rule": "one_ask_per_turn", "tags": ["compound-question", "any-domain"], "bad": "Understand why checkout was frustrating and slow.", "good": "Explore how checkout unfolded and how the participant felt about it.", "note": "Splits two asks into one and drops the assumption of frustration."}

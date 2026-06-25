@@ -39,3 +39,10 @@ def test_load_corpus_skips_invalid_json(tmp_path):
     (tmp_path / "craft" / "bad.json").write_text("not json", encoding="utf-8")
     corpus = retrieve.load_corpus(str(tmp_path))
     assert corpus == []
+
+
+def test_real_corpus_loads_nonempty():
+    corpus = retrieve.load_corpus()
+    assert len(corpus) >= 8
+    assert all(e["type"] in ("craft", "coverage") for e in corpus)
+    assert len({e["id"] for e in corpus}) == len(corpus)  # ids unique

@@ -1,0 +1,1 @@
+{"id": "coverage-commute-01", "type": "coverage", "domain_tags": ["commuting", "travel", "transit"], "dimensions": ["leaving home", "the journey itself", "disruptions or delays", "other people", "arrival & transition"], "note": "Anchor on the most recent commute, not a typical one."}
