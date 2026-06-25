@@ -1,0 +1,1 @@
+{"id": "craft-probe-restates-core-01", "type": "craft", "rule": "probe_adds_direction", "tags": ["redundant-probe", "any-domain"], "bad": "Probe: ask again how checkout went.", "good": "Probe: surface one specific thing that felt smooth or awkward at checkout, if anything stood out.", "note": "A probe must add a new direction, not restate its core."}

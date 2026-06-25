@@ -35,7 +35,7 @@ Single-page research-template builder. The user chats with an AI assistant that 
 ### Request flow
 
 1. **Page load** → `startConversation()` in `app.js` calls `POST /reset` (clears server-side `conversation_history`), then `POST /chat` with an opening message.
-2. **`/chat`** streams SSE events from `stream_conversation()` in `app.py`, which calls the Anthropic API in a loop. The AI uses tool calls to update template sections; each tool call produces a `section_update` SSE event. Text tokens produce `chat_token` events. Exceptions are caught in `safe_stream()` and yielded as `error` events.
+2. **`/chat`** first calls `retrieve.retrieve_context(sections, message)` (RAG grounding — see below; best-effort, returns `None` on any failure), then streams SSE events from `stream_conversation()` in `app.py`, which calls the Anthropic API in a loop. The AI uses tool calls to update template sections; each tool call produces a `section_update` SSE event. Text tokens produce `chat_token` events. Exceptions are caught in `safe_stream()` and yielded as `error` events.
 3. **`applyUpdate()`** in `app.js` receives `section_update` payloads and mutates `state.sections`, then re-renders.
 4. **Export (two-phase):** `exportTemplate()` in `app.js` first calls `POST /review`, which runs a quality check via `prompts/review.txt` (tool-use, returns structured JSON). If issues are found the modal shows a report; if `overall == "pass"` it auto-proceeds. Phase 2 calls `POST /export`, which runs `format_template(sections)` — a deterministic Python function, no AI call — and returns the formatted template text.
 
@@ -45,7 +45,9 @@ Single-page research-template builder. The user chats with an AI assistant that 
 |---|---|
 | `app.py` | Flask server — `/chat`, `/review`, `/export`, `/reset` routes; `stream_conversation()` generator; `process_tool_call()` dispatcher; `format_template()` deterministic formatter |
 | `main.py` | Entry point — starts Flask and opens browser after 1.2 s |
-| `config.py` | Reads `ANTHROPIC_API_KEY` from env; sets `MODEL` and `PORT` |
+| `config.py` | Reads `ANTHROPIC_API_KEY` and `RAG_ENABLED` from env; sets `MODEL` and `PORT` |
+| `retrieve.py` | RAG retrieval layer — loads the `corpus/` JSON at startup, selects relevant entries via a cheap Haiku call (`select_entries`, forced tool-use), and returns a grounding block. Pure helpers + `retrieve_context()` orchestrator; fail-open (returns `None` on any error) |
+| `corpus/` | Curated RAG corpus — `craft/*.json` (good/bad objective exemplars) and `coverage/*.json` (per-domain dimension checklists), one entry per file |
 | `static/app.js` | All frontend logic — `state`, rendering, SSE handling, depth/duration controls, duration-coach UI, two-phase export modal |
 | `static/duration.js` | Pure, DOM-free duration engine — estimate math + coach suggestion engine (`window.DurationEngine`); loaded before `app.js`; unit-tested via `node --test` |
 | `static/style.css` | All styles |
@@ -79,16 +81,23 @@ The depth slider maps to five named presets in `PACING_DEPTH_PRESETS` (breadth /
 
 **Review tool** (`REVIEW_TOOL`): `submit_review` — called by `POST /review` with `tool_choice: any`, forces a structured quality report (no free-text JSON parsing). The report has `overall` (`pass`/`warning`/`error`), `item_issues`, and `structural_issues`.
 
+### RAG retrieval grounding (`retrieve.py`)
+
+Before the gathering agent generates topics, `/chat` calls `retrieve_context(sections, message)`. Once a domain exists (a title or ≥1 topic), it builds a catalog of the `corpus/` entries, has Haiku (`claude-haiku-4-5`, forced `select_entries` tool-use) pick 3–5 relevant ones, and assembles a `<grounding>` block. That block is injected into the **current user turn only** for that one model call — never persisted to `conversation_history` (`stream_conversation`'s `retrieved_block` param). The corpus carries `cache_control` on the catalog for cheap repeat calls.
+
+**Fail-open:** disabled via `RAG_ENABLED=0`, an empty corpus (`RAG_EFFECTIVE` auto-off), a domain-less turn, or any exception all make `retrieve_context` return `None`, and `/chat` behaves exactly as it did pre-feature. RAG is never on the critical path.
+
 ### Export — `format_template(sections)`
 
 Pure Python function in `app.py`. Takes `state.sections` and returns the exact template string. No AI call. Pacing rules emit in groups: 1 / blank / 3 / blank / 3 / blank / 1, then three blank lines before `# Main Interview Guide`. Items use `_normalise_item()` to handle both dict and string forms.
 
 ### Tests
 
-Three suites — all stubs `ANTHROPIC_API_KEY` before importing `app`:
+Four suites — all stub `ANTHROPIC_API_KEY` before importing `app`/`retrieve`:
 
 | File | Covers |
 |---|---|
 | `tests/test_tools.py` | `process_tool_call()` dispatcher + `format_template()` (golden-output + edge cases) |
 | `tests/test_routes.py` | Flask routes via test client — `/chat` SSE stream, tool call dispatch, `/export`, `/reset`, `build_settings_context()` |
 | `tests/test_gathering_prompt.py` | `prompts/gathering.txt` content — verifies objective-writing rules, core/probe definitions, consumer framing |
+| `tests/test_retrieve.py` | `retrieve.py` — corpus loader (parse/skip-malformed), pure helpers (catalog/query/block/domain guard), and the mocked Haiku selection + `retrieve_context` fail-open paths |

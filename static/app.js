@@ -244,6 +244,7 @@ async function streamFromServer(message) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message,
+        sections: state.sections,
         settings: {
           depthValue: state.depthSliderValue,
           depthLabel: { 0: "Breadth", 25: "Slightly Broad", 50: "Balanced", 75: "Slightly Deep", 100: "Deep" }[state.depthSliderValue] || "Balanced",

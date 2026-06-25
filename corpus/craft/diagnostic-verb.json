@@ -1,0 +1,1 @@
+{"id": "craft-diagnostic-verb-01", "type": "craft", "rule": "exploratory_verbs", "tags": ["yes-no", "any-domain"], "bad": "Determine whether the participant was satisfied with the service.", "good": "Explore how the participant felt about the service during the visit.", "note": "Diagnostic verbs collapse to yes/no; exploratory verbs open narrative."}

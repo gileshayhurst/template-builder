@@ -215,3 +215,32 @@ def test_chat_without_settings_uses_base_prompt(client):
         _ = resp.data
     call_kwargs = mock_client.messages.stream.call_args.kwargs
     assert "## Current UI settings" not in call_kwargs["system"]
+
+
+def test_chat_injects_grounding_block(client):
+    with patch("app.retrieve.retrieve_context", return_value="<grounding>GUIDE</grounding>"), \
+         patch("app.client") as mock_client:
+        mock_client.messages.stream.return_value = make_mock_stream(["Ok"])
+        resp = client.post("/chat",
+            data=json.dumps({"message": "Hello",
+                             "sections": {"metadata": {"title": "Grocery"}}}),
+            content_type="application/json")
+        _ = resp.data
+    sent = mock_client.messages.stream.call_args.kwargs["messages"]
+    assert sent[-1]["role"] == "user"
+    assert "<grounding>GUIDE</grounding>" in sent[-1]["content"]
+    assert "Hello" in sent[-1]["content"]
+    # Grounding is transient -- not persisted to history
+    assert app_module.conversation_history[0]["content"] == "Hello"
+
+
+def test_chat_no_grounding_when_retrieval_returns_none(client):
+    with patch("app.retrieve.retrieve_context", return_value=None), \
+         patch("app.client") as mock_client:
+        mock_client.messages.stream.return_value = make_mock_stream(["Ok"])
+        resp = client.post("/chat",
+            data=json.dumps({"message": "Hello"}),
+            content_type="application/json")
+        _ = resp.data
+    sent = mock_client.messages.stream.call_args.kwargs["messages"]
+    assert sent[-1]["content"] == "Hello"

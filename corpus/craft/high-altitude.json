@@ -1,0 +1,1 @@
+{"id": "craft-high-altitude-01", "type": "craft", "rule": "scope_to_slice", "tags": ["overall-impression", "any-domain"], "bad": "Explore the participant's overall impression of the store.", "good": "Trace the moment during the visit when the participant made an unplanned decision.", "note": "Whole-experience scope yields summary; target a bounded slice."}
