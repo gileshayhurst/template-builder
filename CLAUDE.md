@@ -37,21 +37,21 @@ Single-page research-template builder. The user chats with an AI assistant that 
 1. **Page load** → `startConversation()` in `app.js` calls `POST /reset` (clears server-side `conversation_history`), then `POST /chat` with an opening message.
 2. **`/chat`** streams SSE events from `stream_conversation()` in `app.py`, which calls the Anthropic API in a loop. The AI uses tool calls to update template sections; each tool call produces a `section_update` SSE event. Text tokens produce `chat_token` events. Exceptions are caught in `safe_stream()` and yielded as `error` events.
 3. **`applyUpdate()`** in `app.js` receives `section_update` payloads and mutates `state.sections`, then re-renders.
-4. **`/export`** sends the current `state.sections` JSON to a second Anthropic call (non-streaming) using `prompts/generation.txt` as its system prompt, which formats it into the final template syntax.
+4. **Export (two-phase):** `exportTemplate()` in `app.js` first calls `POST /review`, which runs a quality check via `prompts/review.txt` (tool-use, returns structured JSON). If issues are found the modal shows a report; if `overall == "pass"` it auto-proceeds. Phase 2 calls `POST /export`, which runs `format_template(sections)` — a deterministic Python function, no AI call — and returns the formatted template text.
 
 ### Key files
 
 | File | Role |
 |---|---|
-| `app.py` | Flask server — `/chat`, `/export`, `/reset` routes; `stream_conversation()` generator; `process_tool_call()` dispatcher |
+| `app.py` | Flask server — `/chat`, `/review`, `/export`, `/reset` routes; `stream_conversation()` generator; `process_tool_call()` dispatcher; `format_template()` deterministic formatter |
 | `main.py` | Entry point — starts Flask and opens browser after 1.2 s |
 | `config.py` | Reads `ANTHROPIC_API_KEY` from env; sets `MODEL` and `PORT` |
-| `static/app.js` | All frontend logic — `state`, rendering, SSE handling, depth/duration controls, duration-coach UI |
+| `static/app.js` | All frontend logic — `state`, rendering, SSE handling, depth/duration controls, duration-coach UI, two-phase export modal |
 | `static/duration.js` | Pure, DOM-free duration engine — estimate math + coach suggestion engine (`window.DurationEngine`); loaded before `app.js`; unit-tested via `node --test` |
 | `static/style.css` | All styles |
 | `templates/index.html` | Single HTML shell |
 | `prompts/gathering.txt` | System prompt for the AI builder conversation |
-| `prompts/generation.txt` | System prompt for the export formatter |
+| `prompts/review.txt` | System prompt for the AI quality reviewer (`submit_review` tool-use, returns structured JSON) |
 
 ### Frontend state
 
@@ -75,8 +75,20 @@ The depth slider maps to five named presets in `PACING_DEPTH_PRESETS` (breadth /
 
 ### AI tools (defined in `app.py`)
 
-`update_metadata`, `update_pacing`, `update_focus`, `add_topic`, `remove_topic`, `update_expansion`. Each is handled by `process_tool_call()`, which returns a `{section, payload}` dict serialised into a `section_update` SSE event.
+**Gathering tools** (`GATHERING_TOOLS`): `update_metadata`, `update_pacing`, `update_focus`, `add_topic`, `remove_topic`, `update_expansion`. Each is handled by `process_tool_call()`, which returns a `{section, payload}` dict serialised into a `section_update` SSE event.
+
+**Review tool** (`REVIEW_TOOL`): `submit_review` — called by `POST /review` with `tool_choice: any`, forces a structured quality report (no free-text JSON parsing). The report has `overall` (`pass`/`warning`/`error`), `item_issues`, and `structural_issues`.
+
+### Export — `format_template(sections)`
+
+Pure Python function in `app.py`. Takes `state.sections` and returns the exact template string. No AI call. Pacing rules emit in groups: 1 / blank / 3 / blank / 3 / blank / 1, then three blank lines before `# Main Interview Guide`. Items use `_normalise_item()` to handle both dict and string forms.
 
 ### Tests
 
-`tests/test_tools.py` covers `process_tool_call()` only — no Flask routes, no Anthropic calls. The test file stubs `ANTHROPIC_API_KEY` before importing `app`.
+Three suites — all stubs `ANTHROPIC_API_KEY` before importing `app`:
+
+| File | Covers |
+|---|---|
+| `tests/test_tools.py` | `process_tool_call()` dispatcher + `format_template()` (golden-output + edge cases) |
+| `tests/test_routes.py` | Flask routes via test client — `/chat` SSE stream, tool call dispatch, `/export`, `/reset`, `build_settings_context()` |
+| `tests/test_gathering_prompt.py` | `prompts/gathering.txt` content — verifies objective-writing rules, core/probe definitions, consumer framing |
