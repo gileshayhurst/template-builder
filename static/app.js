@@ -79,16 +79,18 @@ function applyDepthPreset(value) {
   renderTemplate();
 }
 
+const DURATION_SCALE_MAX = 30;
+
 function estimateDuration() {
   return DurationEngine.estimateDurationFor(state.sections, state.depthSliderValue);
 }
 
 function durationViewModel() {
   const estimate = estimateDuration();
-  const targetPct = state.durationTarget > 0 ? (state.durationTarget / 90) * 100 : 0;
-  const estimatePct = (estimate / 90) * 100;
+  const targetPct = state.durationTarget > 0 ? (state.durationTarget / DURATION_SCALE_MAX) * 100 : 0;
+  const estimatePct = Math.min(100, (estimate / DURATION_SCALE_MAX) * 100);
   const targetLabelText = state.durationTarget > 0
-    ? `● Target: ${state.durationTarget} min`
+    ? `● Target: ${state.durationTarget === DURATION_SCALE_MAX ? "30+" : state.durationTarget} min`
     : "● No target set";
   return { estimate, targetPct, estimatePct, targetLabelText };
 }
