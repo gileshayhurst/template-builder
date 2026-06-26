@@ -96,7 +96,7 @@ function durationViewModel() {
 }
 
 function setDurationTarget(value) {
-  state.durationTarget = Math.min(90, Math.max(0, value || 0));
+  state.durationTarget = Math.min(DURATION_SCALE_MAX, Math.max(0, value || 0));
   const slider = document.querySelector(".duration-slider");
   const number = document.querySelector(".duration-number");
   if (slider) slider.value = state.durationTarget;
@@ -402,10 +402,10 @@ function renderSettingsStrip() {
           </div>
         </div>
         <div class="duration-inputs">
-          <input type="range" class="duration-slider" min="0" max="90" step="5"
+          <input type="range" class="duration-slider" min="0" max="30" step="1"
             value="${state.durationTarget}"
             oninput="setDurationTarget(parseInt(this.value, 10))">
-          <input type="number" class="duration-number" min="0" max="90" step="5"
+          <input type="number" class="duration-number" min="0" max="30" step="1"
             value="${state.durationTarget || ""}"
             placeholder="—"
             oninput="setDurationTarget(parseInt(this.value, 10) || 0)">
