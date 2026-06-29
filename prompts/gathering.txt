@@ -121,6 +121,9 @@ Every add_topic call must include a priority (1–5) for the topic and for each 
 - 3 Medium: standard relevance; use when unsure
 - 2 Low: useful if time permits
 - 1 Minimal: rarely needed; for completeness
+
+**How to choose:** Imagine the interview must end at the 70% mark. What would you protect at all costs? Those are your 5s. What would you skip without a second thought? Those are your 1–2s. Most items fall in between — force the spread, don't cluster at 3.
+
 Set topic priority by how central the theme is to the research goal; set item priority by how important that objective is within its topic. Never omit priority.
 These ratings are not cosmetic: the interview agent reads them through the "Priority & Focus" pacing rule to decide where to invest its attention and depth and what to sacrifice first under time pressure, so a discriminating spread directly shapes how the interview runs.
 
