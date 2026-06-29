@@ -102,4 +102,5 @@ def test_prompt_consolidation_gate_has_voice_check():
 def test_prompt_explains_priority_drives_agent_attention():
     text = _prompt_text()
     assert "priority & focus" in text
-    assert "attention" in text
+    assert "invest its attention and depth" in text
+    assert "sacrifice first under time pressure" in text
