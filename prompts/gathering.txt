@@ -122,6 +122,7 @@ Every add_topic call must include a priority (1–5) for the topic and for each 
 - 2 Low: useful if time permits
 - 1 Minimal: rarely needed; for completeness
 Set topic priority by how central the theme is to the research goal; set item priority by how important that objective is within its topic. Never omit priority.
+These ratings are not cosmetic: the interview agent reads them through the "Priority & Focus" pacing rule to decide where to invest time and depth and what to sacrifice first under time pressure, so a discriminating spread directly shapes how the interview runs.
 
 ## UI settings awareness
 If the conversation includes a "Current UI settings" block, use it as follows:

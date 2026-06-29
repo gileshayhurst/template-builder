@@ -97,3 +97,9 @@ def test_prompt_anti_patterns_include_visual_and_enumeration():
 
 def test_prompt_consolidation_gate_has_voice_check():
     assert "answerable by voice alone" in _prompt_text()
+
+
+def test_prompt_explains_priority_drives_agent_attention():
+    text = _prompt_text()
+    assert "priority & focus" in text
+    assert "attention" in text
