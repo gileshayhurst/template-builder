@@ -99,9 +99,9 @@ def test_unknown_tool_raises():
 FULL_SECTIONS = {
     "metadata": {"title": "T", "version": "2.0", "date": "2026-01-01"},
     "pacing": {
-        "do_not_rush": "A", "core_vs_probe": "B", "one_ask_per_turn": "C",
-        "keep_light": "D", "follow_signals": "E", "original_followups": "F",
-        "selective_probing": "G", "finish_line": "H"
+        "priority_focus": "Z", "do_not_rush": "A", "core_vs_probe": "B",
+        "one_ask_per_turn": "C", "keep_light": "D", "follow_signals": "E",
+        "original_followups": "F", "selective_probing": "G", "finish_line": "H"
     },
     "focus": "Focus text.",
     "topics": [
@@ -123,6 +123,8 @@ EXPECTED_FULL = (
     "[Prompt metadata only: T | v2.0 | 2026-01-01]\n"
     "\n"
     "# Pacing Instructions\n"
+    "- **Priority & Focus:** Z\n"
+    "\n"
     "- **Do Not Rush** A\n"
     "\n"
     "- **Core vs. Probe:** B\n"
@@ -208,6 +210,8 @@ def test_format_template_pacing_groups():
     assert "- **The Finish Line** H\n\n\n\n# Main Interview Guide" in result
     # One blank line between do_not_rush and core_vs_probe group
     assert "- **Do Not Rush** A\n\n- **Core vs. Probe:**" in result
+    # Priority & Focus is the headline rule, followed by a blank line then Do Not Rush
+    assert "# Pacing Instructions\n- **Priority & Focus:** Z\n\n- **Do Not Rush** A" in result
 
 
 def _make_review_response(overall="pass", item_issues=None, structural_issues=None):
@@ -234,3 +238,17 @@ def test_polish_no_fixable_issues_returns_empty():
             resp = c.post("/polish", json={"sections": {}})
     assert resp.status_code == 200
     assert resp.get_json() == {"updates": []}
+
+
+def test_format_template_renders_priority_focus():
+    """The priority_focus text appears in the Pacing Instructions block."""
+    s = {**FULL_SECTIONS, "pacing": {**FULL_SECTIONS["pacing"], "priority_focus": "Use [P:N] to allocate attention."}}
+    result = format_template(s)
+    assert "- **Priority & Focus:** Use [P:N] to allocate attention." in result
+
+
+def test_update_pacing_enum_includes_priority_focus():
+    """The AI's update_pacing tool can target the new rule."""
+    from app import GATHERING_TOOLS
+    tool = next(t for t in GATHERING_TOOLS if t["name"] == "update_pacing")
+    assert "priority_focus" in tool["input_schema"]["properties"]["rule"]["enum"]

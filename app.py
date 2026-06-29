@@ -59,8 +59,9 @@ GATHERING_TOOLS = [
             "properties": {
                 "rule": {
                     "type": "string",
-                    "enum": ["do_not_rush", "core_vs_probe", "one_ask_per_turn", "keep_light",
-                             "follow_signals", "original_followups", "selective_probing", "finish_line"]
+                    "enum": ["priority_focus", "do_not_rush", "core_vs_probe", "one_ask_per_turn",
+                             "keep_light", "follow_signals", "original_followups",
+                             "selective_probing", "finish_line"]
                 },
                 "text": {"type": "string"}
             },
@@ -289,6 +290,8 @@ def format_template(sections: dict) -> str:
     parts.append(f"[Prompt metadata only: {title} | v{version} | {date}]")
     parts.append("")
     parts.append("# Pacing Instructions")
+    parts.append(f"- **Priority & Focus:** {pacing.get('priority_focus', '')}")
+    parts.append("")
     parts.append(f"- **Do Not Rush** {pacing.get('do_not_rush', '')}")
     parts.append("")
     parts.append(f"- **Core vs. Probe:** {pacing.get('core_vs_probe', '')}")
