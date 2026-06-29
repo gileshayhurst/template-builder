@@ -2,12 +2,14 @@ import json
 import logging
 import os
 import traceback
-from flask import Flask, request, Response, render_template, jsonify
+import uuid
+from flask import Flask, request, Response, render_template, jsonify, session
 import anthropic
 import retrieve
 from config import ANTHROPIC_API_KEY, MODEL, PORT
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 BASE_DIR = os.path.dirname(__file__)
@@ -21,7 +23,23 @@ with open(os.path.join(BASE_DIR, "prompts", "review.txt")) as f:
 with open(os.path.join(BASE_DIR, "prompts", "fixer.txt")) as f:
     FIXER_PROMPT = f.read()
 
-conversation_history = []
+conversations: dict = {}  # session_id → list[message dict]
+
+
+def get_history() -> list:
+    sid = session.get("id")
+    if not sid:
+        sid = str(uuid.uuid4())
+        session["id"] = sid
+    return conversations.setdefault(sid, [])
+
+
+def clear_history() -> None:
+    sid = session.get("id")
+    if not sid:
+        sid = str(uuid.uuid4())
+        session["id"] = sid
+    conversations[sid] = []
 
 GATHERING_TOOLS = [
     {
@@ -336,24 +354,20 @@ def process_tool_call(name, input_data):
         raise ValueError(f"Unknown tool: {name}")
 
 
-def stream_conversation(new_message, system=None, retrieved_block=None):
+def stream_conversation(history, new_message, system=None, retrieved_block=None):
     if system is None:
         system = GATHERING_PROMPT
-    conversation_history.append({"role": "user", "content": new_message})
+    history.append({"role": "user", "content": new_message})
 
     while True:
         if retrieved_block:
-            # Inject grounding into the current user turn for THIS call only.
-            # Not persisted to conversation_history (would bloat history and go
-            # stale next turn). Appended to the last turn, so it disturbs no
-            # earlier-message prefix.
-            messages = conversation_history[:-1] + [{
+            messages = history[:-1] + [{
                 "role": "user",
-                "content": conversation_history[-1]["content"] + "\n\n" + retrieved_block,
+                "content": history[-1]["content"] + "\n\n" + retrieved_block,
             }]
-            retrieved_block = None  # inject once, on the first model call of the turn
+            retrieved_block = None
         else:
-            messages = list(conversation_history)  # snapshot; history grows between loop iterations
+            messages = list(history)
 
         with client.messages.stream(
             model=MODEL,
@@ -366,7 +380,7 @@ def stream_conversation(new_message, system=None, retrieved_block=None):
                 yield f"event: chat_token\ndata: {json.dumps(text)}\n\n"
             final = stream.get_final_message()
 
-        conversation_history.append({
+        history.append({
             "role": "assistant",
             "content": [b.model_dump(exclude_none=True) for b in final.content]
         })
@@ -382,7 +396,7 @@ def stream_conversation(new_message, system=None, retrieved_block=None):
                         "tool_use_id": block.id,
                         "content": "Done"
                     })
-            conversation_history.append({"role": "user", "content": tool_results})
+            history.append({"role": "user", "content": tool_results})
         else:
             break
 
@@ -403,9 +417,10 @@ def chat():
     settings_context = build_settings_context(settings)
     system = GATHERING_PROMPT + settings_context
     retrieved_block = retrieve.retrieve_context(sections, message)
+    history = get_history()
     def safe_stream():
         try:
-            yield from stream_conversation(message, system, retrieved_block)
+            yield from stream_conversation(history, message, system, retrieved_block)
         except Exception as e:
             traceback.print_exc()
             yield f"event: error\ndata: {json.dumps(type(e).__name__ + ': ' + str(e))}\n\n"
@@ -444,7 +459,7 @@ def export_route():
 
 @app.route("/reset", methods=["POST"])
 def reset():
-    conversation_history.clear()
+    clear_history()
     return jsonify({"ok": True})
 
 
