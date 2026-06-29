@@ -8,15 +8,16 @@ from app import app as flask_app, build_settings_context
 
 @pytest.fixture(autouse=True)
 def clear_history():
-    app_module.conversation_history.clear()
+    app_module.conversations.clear()
     yield
-    app_module.conversation_history.clear()
+    app_module.conversations.clear()
 
 
 @pytest.fixture
 def client():
     flask_app.config["TESTING"] = True
-    with flask_app.test_client() as c:
+    flask_app.config["SECRET_KEY"] = "test-secret-key"
+    with flask_app.test_client(use_cookies=True) as c:
         yield c
 
 
@@ -52,11 +53,15 @@ def make_end_stream():
 
 
 def test_reset_clears_history(client):
-    app_module.conversation_history.append({"role": "user", "content": "hi"})
+    # Establish a session, then inject history, then verify /reset clears it
+    client.post("/reset")
+    with client.session_transaction() as sess:
+        sid = sess["id"]
+    app_module.conversations[sid] = [{"role": "user", "content": "hi"}]
     resp = client.post("/reset")
     assert resp.status_code == 200
     assert resp.get_json() == {"ok": True}
-    assert app_module.conversation_history == []
+    assert app_module.conversations.get(sid) == []
 
 
 def test_chat_returns_sse(client):
@@ -79,10 +84,13 @@ def test_chat_appends_to_history(client):
         resp = client.post("/chat",
             data=json.dumps({"message": "Hello"}),
             content_type="application/json")
-        _ = resp.data  # consume stream so generator runs to completion
-    assert len(app_module.conversation_history) == 2
-    assert app_module.conversation_history[0] == {"role": "user", "content": "Hello"}
-    assert app_module.conversation_history[1]["role"] == "assistant"
+        _ = resp.data
+    with client.session_transaction() as sess:
+        sid = sess["id"]
+    history = app_module.conversations[sid]
+    assert len(history) == 2
+    assert history[0] == {"role": "user", "content": "Hello"}
+    assert history[1]["role"] == "assistant"
 
 
 def test_chat_emits_section_update_on_tool_call(client):
@@ -231,7 +239,9 @@ def test_chat_injects_grounding_block(client):
     assert "<grounding>GUIDE</grounding>" in sent[-1]["content"]
     assert "Hello" in sent[-1]["content"]
     # Grounding is transient -- not persisted to history
-    assert app_module.conversation_history[0]["content"] == "Hello"
+    with client.session_transaction() as sess:
+        sid = sess["id"]
+    assert app_module.conversations[sid][0]["content"] == "Hello"
 
 
 def test_chat_no_grounding_when_retrieval_returns_none(client):
