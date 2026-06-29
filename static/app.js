@@ -1,6 +1,7 @@
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
 const PACING_DEFAULTS = {
+  priority_focus: "Each topic and item is marked [P:1]–[P:5]. Use this to allocate attention: spend more time and probe harder on [P:4]–[P:5] material, keep [P:1]–[P:2] efficient, and treat [P:3] as the normal baseline. Aim to cover every topic — a higher priority earns more depth, not the exclusion of lower-priority topics. Priority orders attention within the Core/Probe split, it does not override it. If time runs short, trim the lowest-[P:N] material first, and only drop a whole item or topic as a last resort, lowest priority first.",
   do_not_rush: "If the participant provides brief answers, prioritize every [Probe] point in the Main Interview Guide to unlock more detail.",
   core_vs_probe: "Treat [Core] points as priorities and [Probe] points as optional. Some [Probe] points may go unasked.",
   one_ask_per_turn: "Each turn should usually contain one main question. You may combine a second ask only when it is tightly related, easy to answer in the same thought, and not from a different part of the story.",
@@ -12,6 +13,7 @@ const PACING_DEFAULTS = {
 };
 
 const PACING_LABELS = {
+  priority_focus: "Priority & Focus",
   do_not_rush: "Do Not Rush",
   core_vs_probe: "Core vs. Probe",
   one_ask_per_turn: "One Main Ask Per Turn",
@@ -24,6 +26,7 @@ const PACING_LABELS = {
 
 const PACING_DEPTH_PRESETS = {
   breadth: {
+    priority_focus: "Every topic carries a priority from [P:1] to [P:5]; treat these as a light dial on attention, not an on/off switch. Reaching every topic is the goal. Give [P:4]–[P:5] topics and items modestly more room and perhaps one extra probe, and keep [P:1]–[P:3] brisk — but never let a high-priority topic run so long that later topics go unasked. Priority orders attention within the Core/Probe split, it does not override it. If you fall behind, shorten the lowest-priority material first; drop an item only when time is nearly gone, lowest [P:N] first.",
     do_not_rush: "Keep the conversation moving. If a participant gives a brief answer and the response is clear, accept it and move on. Use probes only when an answer is thin or unclear.",
     core_vs_probe: "Treat [Core] points as must-ask items. Skip most [Probe] points unless they arise naturally. Prioritise covering all topics over depth in any one area.",
     one_ask_per_turn: "Each turn should contain exactly one question. Do not combine follow-up questions or add sub-questions.",
@@ -34,6 +37,7 @@ const PACING_DEPTH_PRESETS = {
     finish_line: "Reaching the end of the Main Interview Guide signals the end of the interview. Begin closing warmly. If remaining_minutes is 5 or more, you may briefly revisit one topic that felt thin. Do not pivot to Expansion Topics."
   },
   slightly_broad: {
+    priority_focus: "Topics and items are marked [P:1]–[P:5]. Use these to share out attention while still covering everything: spend a little more time and the occasional extra probe on [P:4]–[P:5] material, keep [P:1]–[P:2] efficient, and treat [P:3] as the baseline. Cover every topic before depth on any one — a higher priority earns a little more depth, not the exclusion of lower-priority topics. Priority orders attention within the Core/Probe split, not against it. Under time pressure, trim the lowest-[P:N] material first.",
     do_not_rush: "Keep the conversation flowing. Use probes when an answer seems incomplete, but do not linger. Accept brief answers for straightforward questions.",
     core_vs_probe: "Treat [Core] points as priorities. Use [Probe] points selectively — when an answer is thin or a topic clearly needs more colour.",
     one_ask_per_turn: "Each turn should usually contain one main question. You may add a second only when it is tightly related and easy to answer in the same breath.",
@@ -45,6 +49,7 @@ const PACING_DEPTH_PRESETS = {
   },
   balanced: { ...PACING_DEFAULTS },
   slightly_deep: {
+    priority_focus: "Topics and items are marked [P:1]–[P:5]. Invest your richer probing where the number is higher — follow [P:4]–[P:5] material a couple of layers deeper — while keeping [P:1]–[P:2] efficient. Still reach every topic at least briefly; do not let one or two high-priority topics dominate the whole interview. Priority orders attention within the Core/Probe split, not against it. Under time pressure, sacrifice depth on the lowest-[P:N] material first, then drop the lowest-priority items only if you must.",
     do_not_rush: "If a participant gives brief answers, use [Probe] points to unlock more detail. Take time on answers that hint at something richer.",
     core_vs_probe: "Treat [Core] points as priorities and [Probe] points as important tools. Use most probes unless time pressure is significant.",
     one_ask_per_turn: "Each turn should usually contain one main question. You may combine a second when it is tightly related, easy to answer in the same thought, and not from a different part of the story.",
@@ -55,6 +60,7 @@ const PACING_DEPTH_PRESETS = {
     finish_line: "Reaching the end of the Main Interview Guide does not signal the end of the interview. Use the following to fill remaining time until remaining_minutes is 3 or less:\n  1. Circle Back: Revisit an earlier interesting moment to ask for thicker description — a specific emotion, a sensory detail, or the deeper why.\n  2. Expansion: Pivot to the Expansion Topics at the bottom of the plan."
   },
   deep: {
+    priority_focus: "Each topic and item carries a priority from [P:1] to [P:5]. Concentrate your richest probing where it is highest — go several layers deep on [P:5] and [P:4] material, and accept brief answers on [P:1]–[P:2]. Even so, every topic should be reached at least briefly before time runs out; never let one or two high-priority topics swallow the interview. Priority orders attention within the Core/Probe split, it does not override it. Under time pressure, sacrifice depth on the lowest-[P:N] material first, then drop the lowest-priority items entirely before higher-priority ones.",
     do_not_rush: "Prioritize depth over coverage. If the participant gives brief answers, use every available [Probe] point to unlock detail. Never accept a thin answer when a richer one is possible.",
     core_vs_probe: "Treat both [Core] and [Probe] points as essential. Use all probes unless the participant has already addressed them or time is critically short.",
     one_ask_per_turn: "Each turn should contain one focused question. You may add a tightly related follow-up when it deepens the current answer rather than changing the subject.",
