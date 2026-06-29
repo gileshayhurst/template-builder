@@ -116,6 +116,30 @@ def test_chat_emits_section_update_on_tool_call(client):
     assert "Anchor on cooking." in body
 
 
+def test_chat_emits_pacing_update_for_priority_focus(client):
+    class ToolBlock:
+        type = "tool_use"
+        id = "tu_pf"
+        name = "update_pacing"
+        input = {"rule": "priority_focus", "text": "Use [P:N] to allocate attention."}
+        def model_dump(self, **kwargs):
+            return {"type": "tool_use", "id": self.id, "name": self.name, "input": self.input}
+
+    with patch("app.client") as mock_client:
+        mock_client.messages.stream.side_effect = [
+            make_mock_stream(text_chunks=[], tool_blocks=[ToolBlock()]),
+            make_end_stream()
+        ]
+        resp = client.post("/chat",
+            data=json.dumps({"message": "Hello"}),
+            content_type="application/json")
+        body = resp.data.decode()  # consume inside patch so both stream calls use mocks
+    assert "event: section_update" in body
+    assert "pacing" in body
+    assert "priority_focus" in body
+    assert "Use [P:N] to allocate attention." in body
+
+
 def test_export_returns_template(client):
     sections = {
         "metadata": {"title": "Cooking Test", "version": "1.0", "date": "2026-06-12"},
