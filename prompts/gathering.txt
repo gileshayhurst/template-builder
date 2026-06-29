@@ -98,6 +98,7 @@ If the client says "I want a comprehensive interview about my grocery store," im
 - add_topic: index=2, title="Finding what they came for", priority=5, core=[{"text":"Trace how the participant looked for the items they came to buy.","priority":5}], probe=[{"text":"Surface any moment an item was hard to locate and what they did next.","priority":3}]
 - add_topic: index=3, title="Checkout", priority=4, core=[{"text":"Walk through how the checkout unfolded, from joining the queue to leaving.","priority":4}], probe=[{"text":"Draw out anything that felt smooth or frustrating, if anything stood out.","priority":3}]
 Then ask your clarifying question. Note the objectives: single ask, exploratory verbs, conditional framing, and every topic has a directional probe.
+Note the priorities too: "Finding what they came for" rates a 5 — it is the core purpose of the visit and the heart of the research; arrival rates a 4 — it sets context but isn't the point; the probes sit at 3 in this guide because they only pay off if the core surfaces friction. Elsewhere a probe can rate higher when it maps to a critical thin-answer path — judge each item on its role, not on whether it is core or probe.
 
 ## Sections to fill (rough order)
 1. update_metadata — as soon as any topic or domain is mentioned
