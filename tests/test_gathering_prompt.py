@@ -104,3 +104,18 @@ def test_prompt_explains_priority_drives_agent_attention():
     assert "priority & focus" in text
     assert "invest its attention and depth" in text
     assert "sacrifice first under time pressure" in text
+
+
+def test_prompt_has_priority_decision_procedure():
+    text = _prompt_text()
+    assert "how to choose" in text
+    assert "protect at all costs" in text
+    assert "force the spread" in text
+
+
+def test_prompt_worked_example_explains_priority_choices():
+    text = _prompt_text()
+    assert "core purpose of the visit" in text
+    assert "thin-answer path" in text
+    # Guards the design decision that probes are NOT capped low.
+    assert "elsewhere a probe can rate higher" in text
