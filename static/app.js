@@ -221,6 +221,23 @@ function appendStatusMsg(text) {
   return div;
 }
 
+// Error message with a retry affordance so a transient failure doesn't lose the turn.
+function appendErrorMessage(errMsg, retryPayload) {
+  const el = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className = "message ai error-message";
+  div.setAttribute("role", "alert");
+  div.innerHTML = `<div class="role">AI</div><div class="body"></div>`;
+  div.querySelector(".body").textContent = `⚠ Couldn't reach the assistant: ${errMsg}`;
+  const retry = document.createElement("button");
+  retry.className = "retry-btn";
+  retry.textContent = "Retry";
+  retry.onclick = () => { div.remove(); streamFromServer(retryPayload); };
+  div.appendChild(retry);
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
 async function sendMessage() {
   if (state.streaming) return;
   const input = document.getElementById("input");
@@ -301,7 +318,7 @@ async function streamFromServer(message) {
     }
     polishTemplate();
   } catch (err) {
-    appendMessage("ai", `⚠ Could not reach AI: ${err.message}`);
+    appendErrorMessage(err.message, message);
   } finally {
     state.streaming = false;
     document.getElementById("send-btn").disabled = false;
@@ -376,8 +393,11 @@ function renderSettingsStrip() {
   const { estimate, targetPct, estimatePct, targetLabelText } = durationViewModel();
 
   strip.innerHTML = `
-    <div class="settings-strip-header" onclick="toggleSection('settings')">
-      <span class="section-chevron">${collapsed ? "▸" : "▾"}</span>
+    <div class="settings-strip-header" role="button" tabindex="0"
+      aria-expanded="${!collapsed}" data-collapse-key="settings"
+      onclick="toggleSection('settings')"
+      onkeydown="handleToggleKey(event, 'settings')">
+      <span class="section-chevron" aria-hidden="true">${collapsed ? "▸" : "▾"}</span>
       <span>Settings</span>
     </div>
     ${collapsed ? "" : `
@@ -385,6 +405,7 @@ function renderSettingsStrip() {
       <div class="settings-control">
         <div class="settings-control-label">Depth vs. Breadth</div>
         <input type="range" class="depth-slider" min="0" max="100" step="25"
+          aria-label="Depth versus breadth"
           value="${state.depthSliderValue}"
           oninput="applyDepthPreset(parseInt(this.value, 10))">
         <div class="depth-slider-labels">
@@ -409,11 +430,13 @@ function renderSettingsStrip() {
         </div>
         <div class="duration-inputs">
           <input type="range" class="duration-slider" min="0" max="30" step="1"
+            aria-label="Interview duration target (minutes)"
             value="${state.durationTarget}"
             oninput="setDurationTarget(parseInt(this.value, 10))">
           <input type="number" class="duration-number" min="0" max="30" step="1"
             value="${state.durationTarget || ""}"
             placeholder="—"
+            aria-label="Interview duration target in minutes"
             oninput="setDurationTarget(parseInt(this.value, 10) || 0)">
           <span class="duration-unit">min</span>
         </div>
@@ -526,6 +549,28 @@ function toggleSection(key) {
     state.collapsedSections.add(key);
   }
   renderTemplate();
+  // renderTemplate() rebuilds the DOM synchronously, so the toggled control's
+  // replacement exists now — return keyboard focus to it (WCAG 2.4.3). Done
+  // synchronously rather than via rAF, which is throttled on hidden tabs.
+  const el = document.querySelector(`[data-collapse-key="${CSS.escape(key)}"]`);
+  if (el) el.focus();
+}
+
+// Mobile-only: switch which panel (chat vs template) fills the screen.
+function setMobileView(view) {
+  const app = document.querySelector(".app");
+  if (!app) return;
+  app.setAttribute("data-mobile-view", view);
+  document.querySelectorAll(".mobile-tab").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.view === view)));
+}
+
+// Keyboard activation for div-based toggle headers (Enter/Space → toggle).
+function handleToggleKey(e, key) {
+  if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+    e.preventDefault();
+    toggleSection(key);
+  }
 }
 
 function sectionBlock(id, title, bodyEl, collapseKey) {
@@ -538,14 +583,24 @@ function sectionBlock(id, title, bodyEl, collapseKey) {
 
   if (collapseKey) {
     const collapsed = state.collapsedSections.has(collapseKey);
-    header.innerHTML = `<span class="section-chevron">${collapsed ? "▸" : "▾"}</span><span>${escHtml(title)}</span>`;
+    header.innerHTML = `<span class="section-chevron" aria-hidden="true">${collapsed ? "▸" : "▾"}</span><span>${escHtml(title)}</span>`;
     header.style.cursor = "pointer";
+    header.setAttribute("role", "button");
+    header.setAttribute("tabindex", "0");
+    header.setAttribute("aria-expanded", String(!collapsed));
+    header.setAttribute("data-collapse-key", collapseKey);
     header.onclick = () => toggleSection(collapseKey);
+    header.onkeydown = (e) => handleToggleKey(e, collapseKey);
   } else {
     header.textContent = title;
   }
 
-  block.appendChild(header);
+  // Wrap the toggle in a heading (WAI-ARIA accordion pattern) so screen-reader
+  // users can navigate the template by heading; the inner control stays operable.
+  const heading = document.createElement("h2");
+  heading.className = "section-heading";
+  heading.appendChild(header);
+  block.appendChild(heading);
 
   if (!collapseKey || !state.collapsedSections.has(collapseKey)) {
     const body = document.createElement("div");
@@ -594,14 +649,19 @@ function renderPacing() {
 
     const ruleHeader = document.createElement("div");
     ruleHeader.className = "pacing-rule-header";
-    ruleHeader.innerHTML = `<span class="section-chevron">${collapsed ? "▸" : "▾"}</span><span>${escHtml(label)}</span>`;
+    ruleHeader.innerHTML = `<span class="section-chevron" aria-hidden="true">${collapsed ? "▸" : "▾"}</span><span>${escHtml(label)}</span>`;
+    ruleHeader.setAttribute("role", "button");
+    ruleHeader.setAttribute("tabindex", "0");
+    ruleHeader.setAttribute("aria-expanded", String(!collapsed));
+    ruleHeader.setAttribute("data-collapse-key", ruleKey);
     ruleHeader.onclick = () => toggleSection(ruleKey);
+    ruleHeader.onkeydown = (e) => handleToggleKey(e, ruleKey);
     ruleBlock.appendChild(ruleHeader);
 
     if (!collapsed) {
       const ruleBody = document.createElement("div");
       ruleBody.innerHTML = `
-        <textarea oninput="state.sections.pacing['${key}'] = this.value">${escHtml(state.sections.pacing[key])}</textarea>
+        <textarea aria-label="${escHtml(label)} instruction" oninput="state.sections.pacing['${key}'] = this.value">${escHtml(state.sections.pacing[key])}</textarea>
         <button class="reset-link" onclick="resetPacing('${key}')">Reset to preset</button>`;
       ruleBlock.appendChild(ruleBody);
     }
@@ -613,7 +673,7 @@ function renderPacing() {
 
 function renderFocus() {
   const body = document.createElement("div");
-  body.innerHTML = `<textarea class="focus-textarea" placeholder="Interview focus anchor statement…"
+  body.innerHTML = `<textarea class="focus-textarea" aria-label="Interview focus statement" placeholder="Interview focus anchor statement…"
     oninput="state.sections.focus = this.value">${escHtml(state.sections.focus)}</textarea>`;
   return sectionBlock("section-focus", "Interview Focus", body, "focus");
 }
@@ -674,11 +734,19 @@ function renderTopicBlock(topic) {
   const chevron = document.createElement("span");
   chevron.className = "section-chevron";
   chevron.textContent = collapsed ? "▸" : "▾";
+  chevron.setAttribute("role", "button");
+  chevron.setAttribute("tabindex", "0");
+  chevron.setAttribute("aria-label", (collapsed ? "Expand" : "Collapse") + " topic");
+  chevron.setAttribute("aria-expanded", String(!collapsed));
+  chevron.setAttribute("data-collapse-key", topicKey);
+  chevron.onclick = (e) => { e.stopPropagation(); toggleSection(topicKey); };
+  chevron.onkeydown = (e) => handleToggleKey(e, topicKey);
   topicHeader.appendChild(chevron);
 
   const titleInput = document.createElement("input");
   titleInput.value = topic.title;
   titleInput.placeholder = "Topic title…";
+  titleInput.setAttribute("aria-label", "Topic title");
   titleInput.oninput = function () { updateTopicField(topic.index, "title", this.value); };
   titleInput.onclick = e => e.stopPropagation();
   topicHeader.appendChild(titleInput);
@@ -696,6 +764,7 @@ function renderTopicBlock(topic) {
   const removeBtn = document.createElement("button");
   removeBtn.className = "remove-topic-btn";
   removeBtn.textContent = "×";
+  removeBtn.setAttribute("aria-label", "Remove topic");
   removeBtn.onclick = e => { e.stopPropagation(); removeTopicManually(topic.index); };
   topicHeader.appendChild(removeBtn);
 
@@ -794,6 +863,7 @@ function renderItemRow(type, topicIndex, itemIndex, item) {
 
   const textarea = document.createElement("textarea");
   textarea.value = item.text;
+  textarea.setAttribute("aria-label", (type === "core" ? "Core" : "Probe") + " item text");
   textarea.oninput = function () { updateItemText(topicIndex, type, itemIndex, this.value); };
   row.appendChild(textarea);
 
@@ -804,8 +874,8 @@ function renderExpansion() {
   const joined = state.sections.expansion.join("\n");
   const body = document.createElement("div");
   body.innerHTML = `
-    <div style="font-size:11px;color:#888;margin-bottom:6px;">One item per line</div>
-    <textarea class="expansion-textarea" rows="5"
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">One item per line</div>
+    <textarea class="expansion-textarea" rows="5" aria-label="Expansion topics, one per line"
       placeholder="role of family and culture&#10;role of media or inspiration sources&#10;…"
       oninput="state.sections.expansion = this.value.split('\\n').map(s=>s.trim()).filter(Boolean)">${escHtml(joined)}</textarea>`;
   return sectionBlock("section-expansion", "Expansion Topics", body, "expansion");

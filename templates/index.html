@@ -2,15 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Template Builder</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <div class="app">
+  <div class="app" data-mobile-view="chat">
+    <h1 class="sr-only">Interview Template Builder</h1>
 
-    <div class="panel chat-panel">
+    <nav class="mobile-tabs" aria-label="Switch panel">
+      <button type="button" class="mobile-tab" data-view="chat" aria-pressed="true"
+        onclick="setMobileView('chat')">Chat</button>
+      <button type="button" class="mobile-tab" data-view="template" aria-pressed="false"
+        onclick="setMobileView('template')">Template</button>
+    </nav>
+
+    <section class="panel chat-panel" aria-label="AI assistant">
       <div class="panel-header">AI Assistant</div>
-      <div class="messages" id="messages"></div>
+      <div class="messages" id="messages" role="log" aria-live="polite"></div>
       <div class="chat-input">
         <div class="quick-actions-row">
           <button class="quick-action-btn" onclick="sendQuickAction('Can you suggest another topic we haven\'t covered yet?')">+ Suggest a topic</button>
@@ -22,16 +31,16 @@
           <button id="send-btn" onclick="sendMessage()">Send</button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="panel template-panel">
+    <main class="panel template-panel" aria-label="Interview guide template">
       <div class="panel-header">
         <span>Live Template</span>
         <button class="export-btn" onclick="exportTemplate()">Export Template</button>
       </div>
       <div id="settings-strip"></div>
       <div id="template-sections"></div>
-    </div>
+    </main>
 
   </div>
 

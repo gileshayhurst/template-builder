@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-08T15:35:00.000Z",
+  "title": "Design System: Template Builder",
+  "extensions": {
+    "colorMeta": {
+      "terracotta": {
+        "role": "primary",
+        "displayName": "Terracotta",
+        "canonical": "oklch(0.60 0.13 45)",
+        "tonalRamp": ["#3a1a0f", "#5c2a17", "#7d3a20", "#a34a28", "#bf5b34", "#d0795a", "#e8b193", "#fbe9da"]
+      },
+      "peach-soft": {
+        "role": "primary",
+        "displayName": "Peach Soft",
+        "canonical": "oklch(0.94 0.03 55)",
+        "tonalRamp": ["#7d3a20", "#a34a28", "#c56b45", "#e09a72", "#f2c3a4", "#fbe9da", "#fdf3ec", "#fffaf6"]
+      },
+      "navy-ink": {
+        "role": "neutral",
+        "displayName": "Navy Ink",
+        "canonical": "oklch(0.28 0.03 250)",
+        "tonalRamp": ["#0d141d", "#16202c", "#1f2d3d", "#33455a", "#4c6076", "#6b7f95", "#9aabbd", "#d5dee7"]
+      },
+      "slate-body": {
+        "role": "neutral",
+        "displayName": "Slate Body",
+        "canonical": "oklch(0.55 0.03 255)",
+        "tonalRamp": ["#1e2836", "#2f3d4f", "#455568", "#5b6b7f", "#64748b", "#94a3b8", "#c3ccd8", "#e8edf3"]
+      },
+      "page-bg": {
+        "role": "neutral",
+        "displayName": "Cool Ground",
+        "canonical": "oklch(0.96 0.01 250)",
+        "tonalRamp": ["#2b3644", "#3d4b5c", "#556478", "#7c8a9c", "#a7b3c1", "#cdd6e0", "#eef2f7", "#f7f9fc"]
+      },
+      "scrim": {
+        "role": "neutral",
+        "displayName": "Scrim",
+        "canonical": "#00000066",
+        "tonalRamp": []
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page titles like 'Projects'. Navy ink." },
+      "title": { "displayName": "Title", "purpose": "Card and section headings. Navy ink, 700." },
+      "body": { "displayName": "Body", "purpose": "Descriptions and prose. Slate body, 65-75ch measure." },
+      "label": { "displayName": "Label", "purpose": "Uppercase tracked eyebrows and metadata. Slate muted." }
+    },
+    "shadows": [
+      { "name": "overlay-soft", "value": "0 12px 32px rgba(31, 45, 61, 0.12)", "purpose": "Lifts modals/menus above the plane only. Resting surfaces stay flat." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Ease-out-quart for state transitions (hover, focus, fill shifts)." },
+      { "name": "duration-fast", "value": "150ms", "purpose": "Default transition duration for interactive feedback." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Soft-fill primary action used for the highest-emphasis controls (e.g. '+ New Project').",
+      "html": "<button class=\"ds-btn-primary\">+ New Project</button>",
+      "css": ".ds-btn-primary { background: #fbe9da; color: #bf5b34; border: 1px solid #bf5b34; border-radius: 6px; padding: 8px 16px; font: 600 0.875rem Inter, -apple-system, 'Segoe UI', sans-serif; cursor: pointer; transition: background 150ms cubic-bezier(0.22,1,0.36,1), color 150ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { background: #f6dcc2; color: #a34a28; border-color: #a34a28; } .ds-btn-primary:focus-visible { outline: 2px solid #bf5b34; outline-offset: 2px; }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip-filter",
+      "description": "Rounded status/filter pill: peach fill, terracotta uppercase label.",
+      "html": "<button class=\"ds-chip\">Active</button>",
+      "css": ".ds-chip { background: #fbe9da; color: #bf5b34; border: none; border-radius: 999px; padding: 4px 12px; font: 600 0.6875rem Inter, -apple-system, 'Segoe UI', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: background 150ms cubic-bezier(0.22,1,0.36,1); } .ds-chip:hover { background: #f6dcc2; } .ds-chip:focus-visible { outline: 2px solid #bf5b34; outline-offset: 2px; }"
+    },
+    {
+      "name": "Feature Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Warm-tinted feature/nav card with icon tile, navy title, slate description. Flat with hairline border.",
+      "html": "<div class=\"ds-card\"><span class=\"ds-tile\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"#1f2d3d\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.5\"/></svg></span><h3 class=\"ds-card-title\">Project Overview</h3><p class=\"ds-card-body\">Cross-project operational view with participant and session drilldown.</p></div>",
+      "css": ".ds-card { background: #fdf7f1; border: 1px solid #f0e6db; border-radius: 14px; padding: 24px; max-width: 420px; } .ds-tile { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: #f6dcc2; border-radius: 10px; margin-bottom: 16px; } .ds-card-title { margin: 0 0 8px; font: 700 1.25rem Inter, -apple-system, 'Segoe UI', sans-serif; color: #1f2d3d; letter-spacing: -0.005em; } .ds-card-body { margin: 0; font: 400 0.9375rem/1.55 Inter, -apple-system, 'Segoe UI', sans-serif; color: #64748b; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "White field with cool hairline border; border shifts to terracotta on focus.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Search title / public ID\" />",
+      "css": ".ds-input { background: #ffffff; color: #1f2d3d; border: 1px solid #e5e9f0; border-radius: 6px; padding: 10px 12px; font: 400 0.9375rem Inter, -apple-system, 'Segoe UI', sans-serif; width: 260px; outline: none; transition: border-color 150ms cubic-bezier(0.22,1,0.36,1); } .ds-input::placeholder { color: #94a3b8; } .ds-input:focus { border-color: #bf5b34; }"
+    },
+    {
+      "name": "Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Top tab-bar item; active state is a peach pill with terracotta text.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-item--active\">Research</a><a class=\"ds-nav-item\">Study Guide</a></nav>",
+      "css": ".ds-nav { display: inline-flex; gap: 8px; background: #ffffff; } .ds-nav-item { font: 600 0.9375rem Inter, -apple-system, 'Segoe UI', sans-serif; color: #1f2d3d; padding: 6px 12px; border-radius: 6px; text-decoration: none; cursor: pointer; transition: color 150ms cubic-bezier(0.22,1,0.36,1), background 150ms cubic-bezier(0.22,1,0.36,1); } .ds-nav-item:hover { color: #bf5b34; } .ds-nav-item--active { background: #fbe9da; color: #bf5b34; } .ds-nav-item:focus-visible { outline: 2px solid #bf5b34; outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Warm Research Instrument",
+    "overview": "Forven's identity is a deliberate warm-over-cool split. The working ground is a calm, cool blue-gray; content and structure are rendered in a confident navy-slate ink; and every moment of brand or interactivity is carried by a single warm terracotta accent, softened into peach tints for surfaces. It reads as a serious research instrument that is nonetheless warm and human — the opposite of both cold enterprise gray and bright consumer play. This DESIGN.md captures the target Forven system, which the builder's current indigo code does not yet match.",
+    "keyCharacteristics": [
+      "Warm terracotta accent, cool navy ink, cool blue-gray ground.",
+      "Peach/apricot tints for interactive surfaces, pills, and icon tiles.",
+      "Flat by default: depth is tint + hairline border, not shadow.",
+      "Uppercase tracked eyebrows and rounded-square icon tiles are house motifs.",
+      "Humanist sans (Inter), navy for all headings, generous whitespace."
+    ],
+    "rules": [
+      { "name": "The Terracotta-Is-Interactive Rule", "body": "Terracotta and its peach tints mean brand or action. Use them for links, buttons, active nav, filter chips, and headline metrics — never as decoration on static content.", "section": "colors" },
+      { "name": "The Warm-Cool Split Rule", "body": "The ground is cool (page-bg, navy ink); warmth appears only on brand and interactive elements. Never tint the whole page warm, and never render content ink in terracotta.", "section": "colors" },
+      { "name": "The No-Indigo Rule", "body": "The builder's inherited #4f46e5 indigo and any cool-blue accent are forbidden. Terracotta is the only accent.", "section": "colors" },
+      { "name": "The Navy-Ink Rule", "body": "Headings and icon glyphs are always navy ink, never terracotta. Emphasis comes from weight and size, not accent color.", "section": "typography" },
+      { "name": "The Flat Warm-Card Rule", "body": "A card earns separation with a background tint plus a hairline border — never a heavy shadow. If a surface needs a dark blurred shadow to read, the tint/border contrast is too weak.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Terracotta (#bf5b34) as the single interactive/brand accent, softened to Peach (#fbe9da) / Apricot (#f6dcc2) for surfaces.",
+      "Do render all headings and icon glyphs in Navy Ink (#1f2d3d).",
+      "Do keep warm peach/apricot tints and uppercase tracked eyebrows — these are Forven house style, not generic slop, and are correct for this project.",
+      "Do convey depth with tint + hairline border; keep resting surfaces flat.",
+      "Do hold body/placeholder/label text to at least 4.5:1 contrast (WCAG AA)."
+    ],
+    "donts": [
+      "Don't use the builder's inherited indigo (#4f46e5) or any cool-blue accent — it is off-brand for Forven.",
+      "Don't render content ink or headings in terracotta, or tint the whole page warm.",
+      "Don't drift into bright, rounded, emoji-heavy consumer-app energy.",
+      "Don't produce dense, gray, cluttered legacy-enterprise screens.",
+      "Don't over-animate or add decorative flash that competes with the work.",
+      "Don't lean on heavy drop shadows or nested cards for separation."
+    ]
+  }
+}
