@@ -106,6 +106,21 @@ def test_prompt_explains_priority_drives_agent_attention():
     assert "sacrifice first under time pressure" in text
 
 
+def test_prompt_has_ordering_principles():
+    text = _prompt_text()
+    # Defer priming batteries until after own-words capture.
+    assert "priming battery" in text
+    # Position the top evaluative/payoff topic late.
+    assert "evaluative topic" in text
+    # The reorder tool is referenced as the fix.
+    assert "reorder_topics" in text
+
+
+def test_prompt_ordering_rationale_hides_archetype_label():
+    # Silent inference: explain the sequence, never name a study "type".
+    assert 'never name an archetype or study "type"' in _prompt_text()
+
+
 def test_prompt_has_priority_decision_procedure():
     text = _prompt_text()
     assert "how to choose" in text

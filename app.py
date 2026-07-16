@@ -231,6 +231,26 @@ GATHERING_TOOLS = [
         }
     },
     {
+        "name": "reorder_topics",
+        "description": (
+            "Re-sequence the existing topics. Provide the current 1-based topic "
+            "indices in the desired new order (a permutation of all current "
+            "indices). Topics are renumbered to their new positions. Use only to "
+            "reorder — never to add or remove a topic."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "order": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "description": "All current 1-based topic indices in the new order."
+                }
+            },
+            "required": ["order"]
+        }
+    },
+    {
         "name": "update_expansion",
         "description": "Set the full list of expansion topics — secondary themes to explore if the main guide runs short. Call in the initial burst with domain-inferred drafts, and re-call whenever the research focus or main topic set changes significantly. Items should be concise topic labels, distinct from the main topics.",
         "input_schema": {
@@ -379,6 +399,7 @@ def format_template(sections: dict) -> str:
     focus = sections.get("focus", "")
     topics = sections.get("topics", [])
     expansion = sections.get("expansion", [])
+    verbatim = sections.get("verbatim", [])
 
     parts = []
     parts.append(f"[Prompt metadata only: {title} | v{version} | {date}]")
@@ -406,6 +427,13 @@ def format_template(sections: dict) -> str:
     if focus:
         parts.append("## Interview focus")
         parts.append(f"- [Core] {focus}")
+        parts.append("")
+
+    if verbatim:
+        parts.append("## Verbatim Questions")
+        parts.append("Ask each of the following word-for-word, at a natural point in the interview. Do not paraphrase or reword them.")
+        for line in verbatim:
+            parts.append(f'- "{line}"')
         parts.append("")
 
     for i, topic in enumerate(topics, 1):
@@ -445,6 +473,9 @@ def process_tool_call(name, input_data):
         }}
     elif name == "remove_topic":
         return {"section": "remove_topic", "payload": {"index": input_data["index"]}}
+    elif name == "reorder_topics":
+        order = [int(i) for i in input_data["order"]]
+        return {"section": "reorder_topics", "payload": {"order": order}}
     elif name == "update_expansion":
         return {"section": "expansion", "payload": input_data["items"]}
     else:

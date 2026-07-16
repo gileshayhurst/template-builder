@@ -86,6 +86,11 @@ def test_remove_topic():
     assert result == {"section": "remove_topic", "payload": {"index": 3}}
 
 
+def test_reorder_topics_dispatch():
+    result = process_tool_call("reorder_topics", {"order": [3, 1, 2]})
+    assert result == {"section": "reorder_topics", "payload": {"order": [3, 1, 2]}}
+
+
 def test_update_expansion():
     result = process_tool_call("update_expansion", {"items": ["role of family", "media inspiration"]})
     assert result == {"section": "expansion", "payload": ["role of family", "media inspiration"]}
@@ -94,6 +99,31 @@ def test_update_expansion():
 def test_unknown_tool_raises():
     with pytest.raises(ValueError):
         process_tool_call("nonexistent_tool", {})
+
+
+def test_format_template_emits_verbatim_block():
+    sections = {
+        "metadata": {"title": "T", "version": "1.0", "date": "2026-01-01"},
+        "focus": "the participant's most recent visit",
+        "topics": [],
+        "verbatim": ["Think of a busy day. How did you cope?", "Which would you try first, and why?"],
+    }
+    out = format_template(sections)
+    assert "## Verbatim Questions" in out
+    assert "word-for-word" in out
+    assert '- "Think of a busy day. How did you cope?"' in out
+    # Sits after the Interview focus (and thus before the topics loop)
+    assert out.index("## Interview focus") < out.index("## Verbatim Questions")
+
+
+def test_format_template_omits_empty_verbatim():
+    sections = {"metadata": {"title": "T"}, "topics": [], "verbatim": []}
+    assert "Verbatim Questions" not in format_template(sections)
+
+
+def test_format_template_no_verbatim_key_unchanged():
+    sections = {"metadata": {"title": "T"}, "topics": []}
+    assert "Verbatim Questions" not in format_template(sections)
 
 
 FULL_SECTIONS = {
