@@ -9,7 +9,7 @@ const PACING_DEFAULTS = {
   follow_signals: "When something specific, emotional, surprising, or contradictory emerges, follow it briefly, then return to the interview guide.",
   original_followups: "You may ask original follow-up questions not explicitly listed in the interview guide when they help uncover better insight.",
   selective_probing: "Use follow-up probes selectively; they are optional tools, not required after every answer.",
-  finish_line: "Reaching the end of the Main Interview Guide does not signal the end of the interview. If you finish those topics early, you must utilize the following two options to fill the time until remaining_minutes is 3 or less:\n  1. Circle Back: Revisit an earlier interesting moment to ask for \"thicker\" description (sensory details, specific emotions, or a deeper \"why\").\n  2. Expansion: Pivot to the Expansion Topics at the bottom of this plan."
+  finish_line: "If time is nearly up and any [P:5] topic has not yet been reached, go straight to the latest uncovered [P:5] topic, cover its [Core] points, then begin closing — even if it means leaving the current thread. Otherwise, reaching the end of the Main Interview Guide does not signal the end of the interview. If you finish those topics early, you must utilize the following two options to fill the time until remaining_minutes is 3 or less:\n  1. Circle Back: Revisit an earlier interesting moment to ask for \"thicker\" description (sensory details, specific emotions, or a deeper \"why\").\n  2. Expansion: Pivot to the Expansion Topics at the bottom of this plan."
 };
 
 const PACING_LABELS = {
@@ -34,7 +34,7 @@ const PACING_DEPTH_PRESETS = {
     follow_signals: "When something interesting emerges, note it briefly and return immediately to the guide. Do not follow tangents.",
     original_followups: "Stick closely to the interview guide. Only ask questions not in the guide when explicitly necessary to clarify something.",
     selective_probing: "Use probes sparingly. Prefer moving to the next topic over dwelling on the current one.",
-    finish_line: "Reaching the end of the Main Interview Guide signals the end of the interview. Begin closing warmly. If remaining_minutes is 5 or more, you may briefly revisit one topic that felt thin. Do not pivot to Expansion Topics."
+    finish_line: "If time is nearly up and any [P:5] topic has not yet been reached, go straight to the latest uncovered [P:5] topic, cover its [Core] points, then close warmly — even if it means leaving the current thread. Otherwise, reaching the end of the Main Interview Guide signals the end of the interview: begin closing warmly. If remaining_minutes is 5 or more, you may briefly revisit one topic that felt thin. Do not pivot to Expansion Topics."
   },
   slightly_broad: {
     priority_focus: "Topics and items are marked [P:1]–[P:5]. Use these to share out attention while still covering everything: spend a little more time and the occasional extra probe on [P:4]–[P:5] material, keep [P:1]–[P:2] efficient, and treat [P:3] as the baseline. Cover every topic before depth on any one — a higher priority earns a little more depth, not the exclusion of lower-priority topics. Priority orders attention within the Core/Probe split, not against it. Under time pressure, trim the lowest-[P:N] material first.",
@@ -45,7 +45,7 @@ const PACING_DEPTH_PRESETS = {
     follow_signals: "When something specific or emotional emerges, follow it with one brief follow-up, then return to the guide.",
     original_followups: "You may ask original follow-up questions when they would clearly deepen understanding. Keep them brief.",
     selective_probing: "Use follow-up probes selectively. Prefer coverage over depth when time is limited.",
-    finish_line: "Reaching the end of the Main Interview Guide does not signal the end of the interview. If remaining_minutes is 5 or more, use one of these options to fill the time:\n  1. Circle Back: Revisit an earlier interesting moment to draw out a little more detail.\n  2. Expansion: Lightly touch on one Expansion Topic if it fits the conversation.\nClose warmly once remaining_minutes is 3 or less."
+    finish_line: "If time is nearly up and any [P:5] topic has not yet been reached, go straight to the latest uncovered [P:5] topic, cover its [Core] points, then begin closing — even if it means leaving the current thread. Otherwise, reaching the end of the Main Interview Guide does not signal the end of the interview. If remaining_minutes is 5 or more, use one of these options to fill the time:\n  1. Circle Back: Revisit an earlier interesting moment to draw out a little more detail.\n  2. Expansion: Lightly touch on one Expansion Topic if it fits the conversation.\nClose warmly once remaining_minutes is 3 or less."
   },
   balanced: { ...PACING_DEFAULTS },
   slightly_deep: {
@@ -57,7 +57,7 @@ const PACING_DEPTH_PRESETS = {
     follow_signals: "When something specific, emotional, surprising, or contradictory emerges, follow it — ask a clarifying or deepening question — then return to the guide.",
     original_followups: "Ask original follow-up questions when they would help uncover better insight. Lean into moments that feel rich, unresolved, or surprising.",
     selective_probing: "Use probes thoughtfully. When an answer feels thin or opens a door, follow it. Do not skip probes by default.",
-    finish_line: "Reaching the end of the Main Interview Guide does not signal the end of the interview. Use the following to fill remaining time until remaining_minutes is 3 or less:\n  1. Circle Back: Revisit an earlier interesting moment to ask for thicker description — a specific emotion, a sensory detail, or the deeper why.\n  2. Expansion: Pivot to the Expansion Topics at the bottom of the plan."
+    finish_line: "If time is nearly up and any [P:5] topic has not yet been reached, go straight to the latest uncovered [P:5] topic, cover its [Core] points, then begin closing — even if it means leaving the current thread. Otherwise, reaching the end of the Main Interview Guide does not signal the end of the interview. Use the following to fill remaining time until remaining_minutes is 3 or less:\n  1. Circle Back: Revisit an earlier interesting moment to ask for thicker description — a specific emotion, a sensory detail, or the deeper why.\n  2. Expansion: Pivot to the Expansion Topics at the bottom of the plan."
   },
   deep: {
     priority_focus: "Each topic and item carries a priority from [P:1] to [P:5]. Concentrate your richest probing where it is highest — go several layers deep on [P:5] and [P:4] material, and accept brief answers on [P:1]–[P:2]. Even so, every topic should be reached at least briefly before time runs out; never let one or two high-priority topics swallow the interview. Priority orders attention within the Core/Probe split, it does not override it. Under time pressure, sacrifice depth on the lowest-[P:N] material first, then drop the lowest-priority items entirely before higher-priority ones.",
@@ -68,7 +68,7 @@ const PACING_DEPTH_PRESETS = {
     follow_signals: "When something specific, emotional, surprising, or contradictory emerges, follow it fully. Ask multiple deepening questions before returning to the guide. These moments often yield the richest insight.",
     original_followups: "Actively ask original follow-up questions not in the guide whenever they would surface deeper understanding. Treat the guide as a floor, not a ceiling.",
     selective_probing: "Use every relevant probe. Probes are not optional tools — they are the primary mechanism for achieving depth. Only skip a probe if the participant has already fully addressed it.",
-    finish_line: "Reaching the end of the Main Interview Guide does not signal the end of the interview. You must use the following to fill the time until remaining_minutes is 3 or less:\n  1. Circle Back: Revisit every moment that had depth potential. Push for sensory detail, specific emotions, and the deeper why behind what they shared. This is the primary tool at this depth.\n  2. Expansion: Pivot to the Expansion Topics at the bottom of the plan."
+    finish_line: "If time is nearly up and any [P:5] topic has not yet been reached, go straight to the latest uncovered [P:5] topic, cover its [Core] points, then begin closing — even if it means leaving the current thread. Otherwise, reaching the end of the Main Interview Guide does not signal the end of the interview. You must use the following to fill the time until remaining_minutes is 3 or less:\n  1. Circle Back: Revisit every moment that had depth potential. Push for sensory detail, specific emotions, and the deeper why behind what they shared. This is the primary tool at this depth.\n  2. Expansion: Pivot to the Expansion Topics at the bottom of the plan."
   }
 };
 
