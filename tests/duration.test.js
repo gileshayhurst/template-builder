@@ -177,3 +177,36 @@ test('reorderTopics: move last item to first position', () => {
   assert.deepStrictEqual(result.map(t => t.title), ['C', 'A', 'B']);
   assert.deepStrictEqual(result.map(t => t.index), [1, 2, 3]);
 });
+
+test('applyOrder: renumbers to the given permutation', () => {
+  const topics = [
+    { index: 1, title: 'A', priority: 3, core: [], probe: [] },
+    { index: 2, title: 'B', priority: 3, core: [], probe: [] },
+    { index: 3, title: 'C', priority: 3, core: [], probe: [] },
+  ];
+  const result = D.applyOrder(topics, [3, 1, 2]);
+  assert.deepStrictEqual(result.map(t => t.title), ['C', 'A', 'B']);
+  assert.deepStrictEqual(result.map(t => t.index), [1, 2, 3]);
+});
+
+test('applyOrder: does not mutate input', () => {
+  const topics = [
+    { index: 1, title: 'A', priority: 3, core: [], probe: [] },
+    { index: 2, title: 'B', priority: 3, core: [], probe: [] },
+  ];
+  D.applyOrder(topics, [2, 1]);
+  assert.deepStrictEqual(topics.map(t => t.title), ['A', 'B']);
+  assert.deepStrictEqual(topics.map(t => t.index), [1, 2]);
+});
+
+test('applyOrder: returns null on non-permutation', () => {
+  const topics = [
+    { index: 1, title: 'A', priority: 3, core: [], probe: [] },
+    { index: 2, title: 'B', priority: 3, core: [], probe: [] },
+    { index: 3, title: 'C', priority: 3, core: [], probe: [] },
+  ];
+  assert.strictEqual(D.applyOrder(topics, [3, 1]), null);       // wrong length
+  assert.strictEqual(D.applyOrder(topics, [3, 1, 4]), null);    // unknown index
+  assert.strictEqual(D.applyOrder(topics, [1, 1, 2]), null);    // duplicate
+  assert.strictEqual(D.applyOrder(topics, 'nope'), null);       // not an array
+});

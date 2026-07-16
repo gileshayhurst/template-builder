@@ -99,6 +99,17 @@
     return arr.map((t, i) => ({ ...t, index: i + 1 }));
   }
 
+  // Reorder to an explicit permutation of the topics' current 1-based indices.
+  // Returns a new array renumbered to positions, or null if `order` is not a
+  // permutation of the current indices (caller then no-ops).
+  function applyOrder(topics, order) {
+    if (!Array.isArray(order) || order.length !== topics.length) return null;
+    const byIndex = new Map(topics.map(t => [t.index, t]));
+    if (new Set(order).size !== order.length) return null;
+    if (!order.every(i => byIndex.has(i))) return null;
+    return order.map((i, pos) => ({ ...byIndex.get(i), index: pos + 1 }));
+  }
+
   // Returns up to 3 suggestion descriptors, each:
   //   { type, label, detail, deltaMin, ...params consumed by the UI layer }
   // Internal ranking fields on each descriptor:
@@ -181,7 +192,7 @@
     return cands.slice(0, 3);
   }
 
-  const api = { TOLERANCE, priorityFactor, depthFactorFor, estimateRawFor, estimateDurationFor, generateSuggestions, applySuggestion, topicMinutes, reorderTopics };
+  const api = { TOLERANCE, priorityFactor, depthFactorFor, estimateRawFor, estimateDurationFor, generateSuggestions, applySuggestion, topicMinutes, reorderTopics, applyOrder };
   if (typeof window !== 'undefined') window.DurationEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })();

@@ -231,6 +231,26 @@ GATHERING_TOOLS = [
         }
     },
     {
+        "name": "reorder_topics",
+        "description": (
+            "Re-sequence the existing topics. Provide the current 1-based topic "
+            "indices in the desired new order (a permutation of all current "
+            "indices). Topics are renumbered to their new positions. Use only to "
+            "reorder — never to add or remove a topic."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "order": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "description": "All current 1-based topic indices in the new order."
+                }
+            },
+            "required": ["order"]
+        }
+    },
+    {
         "name": "update_expansion",
         "description": "Set the full list of expansion topics — secondary themes to explore if the main guide runs short. Call in the initial burst with domain-inferred drafts, and re-call whenever the research focus or main topic set changes significantly. Items should be concise topic labels, distinct from the main topics.",
         "input_schema": {
@@ -445,6 +465,9 @@ def process_tool_call(name, input_data):
         }}
     elif name == "remove_topic":
         return {"section": "remove_topic", "payload": {"index": input_data["index"]}}
+    elif name == "reorder_topics":
+        order = [int(i) for i in input_data["order"]]
+        return {"section": "reorder_topics", "payload": {"order": order}}
     elif name == "update_expansion":
         return {"section": "expansion", "payload": input_data["items"]}
     else:

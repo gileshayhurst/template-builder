@@ -86,6 +86,11 @@ def test_remove_topic():
     assert result == {"section": "remove_topic", "payload": {"index": 3}}
 
 
+def test_reorder_topics_dispatch():
+    result = process_tool_call("reorder_topics", {"order": [3, 1, 2]})
+    assert result == {"section": "reorder_topics", "payload": {"order": [3, 1, 2]}}
+
+
 def test_update_expansion():
     result = process_tool_call("update_expansion", {"items": ["role of family", "media inspiration"]})
     assert result == {"section": "expansion", "payload": ["role of family", "media inspiration"]}

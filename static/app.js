@@ -364,6 +364,19 @@ function applyUpdate(update) {
     const removeIdx = parseInt(payload.index, 10);
     state.sections.topics = state.sections.topics.filter(t => t.index !== removeIdx);
     flashSection("section-topics");
+  } else if (section === "reorder_topics") {
+    const order = (payload.order || []).map(n => parseInt(n, 10));
+    const reordered = DurationEngine.applyOrder(state.sections.topics, order);
+    if (reordered) {
+      const newCollapsed = new Set();
+      order.forEach((oldIdx, pos) => {
+        if (state.collapsedSections.has(`topic-${oldIdx}`)) newCollapsed.add(`topic-${pos + 1}`);
+      });
+      state.collapsedSections.forEach(k => { if (!k.startsWith("topic-")) newCollapsed.add(k); });
+      state.collapsedSections = newCollapsed;
+      state.sections.topics = reordered;
+      flashSection("section-topics");
+    }
   } else if (section === "expansion") {
     state.sections.expansion = payload;
     flashSection("section-expansion");
