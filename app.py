@@ -399,6 +399,7 @@ def format_template(sections: dict) -> str:
     focus = sections.get("focus", "")
     topics = sections.get("topics", [])
     expansion = sections.get("expansion", [])
+    verbatim = sections.get("verbatim", [])
 
     parts = []
     parts.append(f"[Prompt metadata only: {title} | v{version} | {date}]")
@@ -426,6 +427,13 @@ def format_template(sections: dict) -> str:
     if focus:
         parts.append("## Interview focus")
         parts.append(f"- [Core] {focus}")
+        parts.append("")
+
+    if verbatim:
+        parts.append("## Verbatim Questions")
+        parts.append("Ask each of the following word-for-word, at a natural point in the interview. Do not paraphrase or reword them.")
+        for line in verbatim:
+            parts.append(f'- "{line}"')
         parts.append("")
 
     for i, topic in enumerate(topics, 1):

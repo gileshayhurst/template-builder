@@ -101,6 +101,31 @@ def test_unknown_tool_raises():
         process_tool_call("nonexistent_tool", {})
 
 
+def test_format_template_emits_verbatim_block():
+    sections = {
+        "metadata": {"title": "T", "version": "1.0", "date": "2026-01-01"},
+        "focus": "the participant's most recent visit",
+        "topics": [],
+        "verbatim": ["Think of a busy day. How did you cope?", "Which would you try first, and why?"],
+    }
+    out = format_template(sections)
+    assert "## Verbatim Questions" in out
+    assert "word-for-word" in out
+    assert '- "Think of a busy day. How did you cope?"' in out
+    # Sits after the Interview focus (and thus before the topics loop)
+    assert out.index("## Interview focus") < out.index("## Verbatim Questions")
+
+
+def test_format_template_omits_empty_verbatim():
+    sections = {"metadata": {"title": "T"}, "topics": [], "verbatim": []}
+    assert "Verbatim Questions" not in format_template(sections)
+
+
+def test_format_template_no_verbatim_key_unchanged():
+    sections = {"metadata": {"title": "T"}, "topics": []}
+    assert "Verbatim Questions" not in format_template(sections)
+
+
 FULL_SECTIONS = {
     "metadata": {"title": "T", "version": "2.0", "date": "2026-01-01"},
     "pacing": {

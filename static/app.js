@@ -139,7 +139,8 @@ const state = {
     pacing: { ...PACING_DEFAULTS },
     focus: "",
     topics: [],
-    expansion: []
+    expansion: [],
+    verbatim: []
   }
 };
 
@@ -552,6 +553,7 @@ function renderTemplate() {
   container.appendChild(renderPacing());
   container.appendChild(renderFocus());
   container.appendChild(renderTopics());
+  container.appendChild(renderVerbatim());
   container.appendChild(renderExpansion());
 }
 
@@ -892,6 +894,17 @@ function renderExpansion() {
       placeholder="role of family and culture&#10;role of media or inspiration sources&#10;…"
       oninput="state.sections.expansion = this.value.split('\\n').map(s=>s.trim()).filter(Boolean)">${escHtml(joined)}</textarea>`;
   return sectionBlock("section-expansion", "Expansion Topics", body, "expansion");
+}
+
+function renderVerbatim() {
+  const joined = state.sections.verbatim.join("\n");
+  const body = document.createElement("div");
+  body.innerHTML = `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Exact lines to ask word-for-word, one per line. You author these — the assistant never edits them.</div>
+    <textarea class="expansion-textarea" rows="4" aria-label="Verbatim questions, one per line"
+      placeholder="Think of a busy day. How did you cope?&#10;Which would you try first, and why?&#10;…"
+      oninput="state.sections.verbatim = this.value.split('\\n').map(s=>s.trim()).filter(Boolean)">${escHtml(joined)}</textarea>`;
+  return sectionBlock("section-verbatim", "Verbatim Questions", body, "verbatim");
 }
 
 // ─── EDITING HELPERS ──────────────────────────────────────────────────────────
