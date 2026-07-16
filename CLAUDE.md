@@ -28,6 +28,19 @@ node --test tests/duration.test.js
 
 **Windows note:** Start Flask via PowerShell (`python main.py`), not the Bash tool. Before restarting, kill any stale processes holding port 5000: `Stop-Process -Id <PID> -Force` (find PIDs with `netstat -ano | Select-String ':5000.*LISTENING'`).
 
+## Security constraints
+
+Every route is an unauthenticated proxy to a paid Anthropic key, so the trust boundary is enforced in `app.py`'s `_gate_request()` — do not weaken it:
+
+- **Localhost by default.** With `APP_PASSWORD` unset, non-loopback requests get 403. Set `APP_PASSWORD` to serve remotely; callers then need HTTP basic auth (any username). `render.yaml` marks it `sync: false`, so a deploy has no password until one is set in the dashboard.
+- **`TRUSTED_HOSTS`** must list the served hostname or every request 400s. Defaults to `localhost,127.0.0.1`, which blocks DNS rebinding against a local instance. Port is ignored by the check.
+- **Never `debug=True`** — the Werkzeug debugger is RCE. Opt in via `FLASK_DEBUG=1` only.
+- **`message` must be a plain string** (`/chat`). A list would reach the API as content blocks, letting a caller forge `tool_result` entries.
+- **Caps:** `MAX_CONTENT_LENGTH` (256 KB), `MAX_MESSAGE_CHARS`, `MAX_SESSIONS` (evicts oldest), `MAX_HISTORY_MESSAGES` (`trim_history()` only cuts at a plain user turn, so tool_use/tool_result pairs stay intact), `RATE_LIMIT_PER_MIN` on `/chat` + `/polish` for non-loopback callers.
+- **One in-flight turn per session** — `get_session_lock()`; a second concurrent `/chat` gets 409. Threads share history, and interleaved appends corrupt it.
+- **Errors are generic to the client**; details go to the server log only.
+- `/export` returns the template and deliberately does **not** write to disk.
+
 ## Architecture
 
 Single-page research-template builder. The user chats with an AI assistant that fills a structured interview guide template in real time.

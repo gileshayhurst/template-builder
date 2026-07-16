@@ -1,6 +1,9 @@
+import hmac
 import json
 import logging
 import os
+import threading
+import time
 import traceback
 import uuid
 from flask import Flask, request, Response, render_template, jsonify, session
@@ -11,6 +14,28 @@ from config import ANTHROPIC_API_KEY, MODEL, PORT
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+
+# Reject Host headers we don't serve. Without this, a malicious page can point
+# its own domain at 127.0.0.1 (DNS rebinding) and drive this app -- and the API
+# key behind it -- from any site the user visits. The port is ignored by the
+# check, so "localhost" covers "localhost:5000" too.
+app.config["TRUSTED_HOSTS"] = [
+    h.strip() for h in os.environ.get("TRUSTED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()
+]
+
+# Every route takes small JSON; anything larger is abuse, not use.
+app.config["MAX_CONTENT_LENGTH"] = 256 * 1024
+
+MAX_MESSAGE_CHARS = 8000
+MAX_SESSIONS = 500
+MAX_HISTORY_MESSAGES = 40
+RATE_LIMIT_PER_MIN = int(os.environ.get("RATE_LIMIT_PER_MIN", "30"))
+
+# Set APP_PASSWORD to expose this app beyond localhost. Unset, it stays a local
+# tool: every route is an unauthenticated proxy to a paid API key, so remote
+# callers are refused rather than served.
+APP_PASSWORD = os.environ.get("APP_PASSWORD")
+LOOPBACK = {"127.0.0.1", "::1"}
 
 BASE_DIR = os.path.dirname(__file__)
 
@@ -23,23 +48,92 @@ with open(os.path.join(BASE_DIR, "prompts", "review.txt")) as f:
 with open(os.path.join(BASE_DIR, "prompts", "fixer.txt")) as f:
     FIXER_PROMPT = f.read()
 
-conversations: dict = {}  # session_id → list[message dict]
+conversations: dict = {}  # session_id → list[message dict]  (oldest first; capped)
+_session_locks: dict = {}  # session_id → threading.Lock
+_registry_lock = threading.Lock()  # guards conversations + _session_locks
+
+# ponytail: in-memory, per-process rate limiting. Fine at --workers 1; needs a
+# shared store (Redis) if the worker count ever grows.
+_hits: dict = {}  # ip → list[timestamp]
+_hits_lock = threading.Lock()
+
+
+def _rate_limited(ip: str) -> bool:
+    now = time.monotonic()
+    with _hits_lock:
+        hits = [t for t in _hits.get(ip, []) if now - t < 60]
+        if len(hits) >= RATE_LIMIT_PER_MIN:
+            _hits[ip] = hits
+            return True
+        hits.append(now)
+        _hits[ip] = hits
+        if len(_hits) > 1000:  # bound the dict: drop IPs with no live hits
+            for k in [k for k, v in _hits.items() if not v or now - v[-1] > 60]:
+                _hits.pop(k, None)
+        return False
+
+
+@app.before_request
+def _gate_request():
+    if APP_PASSWORD:
+        auth = request.authorization
+        if not auth or not auth.password or not hmac.compare_digest(auth.password, APP_PASSWORD):
+            return Response("Authentication required.", 401,
+                            {"WWW-Authenticate": 'Basic realm="Template Builder"'})
+    elif request.remote_addr not in LOOPBACK:
+        return Response("Set APP_PASSWORD to expose this app beyond localhost.", 403)
+
+    # Only the model-calling routes cost money; loopback is the operator's own key.
+    if request.endpoint in ("chat", "polish_route") and request.remote_addr not in LOOPBACK:
+        if _rate_limited(request.remote_addr or "unknown"):
+            return jsonify({"error": "Too many requests. Please slow down."}), 429
+    return None
+
+
+def _session_id() -> str:
+    sid = session.get("id")
+    if not sid:
+        sid = str(uuid.uuid4())
+        session["id"] = sid
+    return sid
 
 
 def get_history() -> list:
-    sid = session.get("id")
-    if not sid:
-        sid = str(uuid.uuid4())
-        session["id"] = sid
-    return conversations.setdefault(sid, [])
+    sid = _session_id()
+    with _registry_lock:
+        # Cookie-less callers mint a fresh session each request, so this dict
+        # would otherwise grow until the process dies. Evict oldest first.
+        while sid not in conversations and len(conversations) >= MAX_SESSIONS:
+            oldest = next(iter(conversations))  # dicts keep insertion order
+            conversations.pop(oldest, None)
+            _session_locks.pop(oldest, None)
+        return conversations.setdefault(sid, [])
+
+
+def get_session_lock() -> threading.Lock:
+    sid = _session_id()
+    with _registry_lock:
+        return _session_locks.setdefault(sid, threading.Lock())
 
 
 def clear_history() -> None:
-    sid = session.get("id")
-    if not sid:
-        sid = str(uuid.uuid4())
-        session["id"] = sid
-    conversations[sid] = []
+    sid = _session_id()
+    with _registry_lock:
+        conversations[sid] = []
+
+
+def trim_history(history: list) -> None:
+    """Cap history length, cutting only at a plain user turn so tool_use /
+    tool_result pairs are never split (the API rejects an orphaned pair)."""
+    if len(history) <= MAX_HISTORY_MESSAGES:
+        return
+    start = len(history) - MAX_HISTORY_MESSAGES
+    while start < len(history) and not (
+        history[start].get("role") == "user" and isinstance(history[start].get("content"), str)
+    ):
+        start += 1
+    if start < len(history):  # no safe cut point → leave it alone
+        del history[:start]
 
 GATHERING_TOOLS = [
     {
@@ -360,6 +454,7 @@ def process_tool_call(name, input_data):
 def stream_conversation(history, new_message, system=None, retrieved_block=None):
     if system is None:
         system = GATHERING_PROMPT
+    trim_history(history)
     history.append({"role": "user", "content": new_message})
 
     while True:
@@ -413,27 +508,46 @@ def index():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.json
-    message = data["message"]
-    settings = data.get("settings", {})
-    sections = data.get("sections", {})
-    settings_context = build_settings_context(settings)
+    data = request.get_json(silent=True) or {}
+    message = data.get("message")
+    # Must be a plain string: the Anthropic API also accepts a list of content
+    # blocks, which would let a caller inject forged tool_result blocks.
+    if not isinstance(message, str) or not message.strip():
+        return jsonify({"error": "message must be a non-empty string"}), 400
+    if len(message) > MAX_MESSAGE_CHARS:
+        return jsonify({"error": "message too long"}), 400
+    settings = data.get("settings")
+    sections = data.get("sections")
+    settings_context = build_settings_context(settings if isinstance(settings, dict) else {})
     system = GATHERING_PROMPT + settings_context
-    retrieved_block = retrieve.retrieve_context(sections, message)
+    retrieved_block = retrieve.retrieve_context(sections if isinstance(sections, dict) else {}, message)
     history = get_history()
+
+    # One in-flight turn per session: concurrent appends to the same history
+    # interleave and corrupt the message sequence (Procfile runs 4 threads).
+    lock = get_session_lock()
+    if not lock.acquire(blocking=False):
+        return jsonify({"error": "A response is already in progress."}), 409
+
     def safe_stream():
+        # ponytail: released when the response iterator closes, which Werkzeug
+        # guarantees even on client disconnect.
         try:
             yield from stream_conversation(history, message, system, retrieved_block)
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
-            yield f"event: error\ndata: {json.dumps(type(e).__name__ + ': ' + str(e))}\n\n"
+            yield f"event: error\ndata: {json.dumps('the assistant is unavailable, please retry')}\n\n"
+        finally:
+            lock.release()
     return Response(safe_stream(), mimetype="text/event-stream")
 
 
 @app.route("/export", methods=["POST"])
 def export_route():
     body = request.get_json(silent=True) or {}
-    sections = body.get("sections", {})
+    sections = body.get("sections")
+    if not isinstance(sections, dict):
+        return jsonify({"error": "sections must be an object"}), 400
 
     try:
         template_text = format_template(sections)
@@ -441,23 +555,19 @@ def export_route():
         def safe_str(s, default=""):
             return "".join(c if c.isalnum() or c in " -_" else "" for c in str(s or default)).strip()
 
-        title = sections.get("metadata", {}).get("title", "template")
-        version = sections.get("metadata", {}).get("version", "1.0")
-        date = sections.get("metadata", {}).get("date", "")
-        safe_title = safe_str(title, "template").replace(" ", "-")
-        safe_version = safe_str(version, "1.0")
-        safe_date = safe_str(date)
+        meta = sections.get("metadata") or {}
+        safe_title = safe_str(meta.get("title", "template"), "template").replace(" ", "-")
+        safe_version = safe_str(meta.get("version", "1.0"), "1.0")
+        safe_date = safe_str(meta.get("date", ""))
         filename = f"{safe_title}-v{safe_version}-{safe_date}.txt"
 
-        output_dir = os.path.join(BASE_DIR, "output")
-        os.makedirs(output_dir, exist_ok=True)
-        with open(os.path.join(output_dir, filename), "w", encoding="utf-8") as f:
-            f.write(template_text)
-
+        # The template text is returned to the caller, so there is nothing to
+        # gain from also writing it to server disk -- and doing so let any
+        # caller fill the disk.
         return jsonify({"template": template_text, "filename": filename})
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "could not format the template"}), 500
 
 
 @app.route("/reset", methods=["POST"])
@@ -469,7 +579,9 @@ def reset():
 @app.route("/polish", methods=["POST"])
 def polish_route():
     body = request.get_json(silent=True) or {}
-    sections = body.get("sections", {})
+    sections = body.get("sections")
+    if not isinstance(sections, dict):
+        return jsonify({"updates": []})
     try:
         review = _run_review(sections)
         fixable = [i for i in review.get("item_issues", []) if i.get("suggestion")]
@@ -483,4 +595,6 @@ def polish_route():
 
 
 if __name__ == "__main__":
-    app.run(port=PORT, debug=True)
+    # Never default to debug=True: the Werkzeug debugger is remote code
+    # execution for anyone who can reach the port and trigger an exception.
+    app.run(port=PORT, debug=os.environ.get("FLASK_DEBUG") == "1")

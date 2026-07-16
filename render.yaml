@@ -10,3 +10,12 @@ services:
         sync: false
       - key: SECRET_KEY
         generateValue: true
+      # Required to serve anything beyond localhost. Without it the app refuses
+      # remote requests rather than acting as an open proxy to the API key above.
+      # Set it in the Render dashboard; the app asks for it via HTTP basic auth
+      # (any username).
+      - key: APP_PASSWORD
+        sync: false
+      # Must list the deployed hostname, or every request is rejected.
+      - key: TRUSTED_HOSTS
+        value: template-builder.onrender.com
