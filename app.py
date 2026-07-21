@@ -75,14 +75,6 @@ def _rate_limited(ip: str) -> bool:
 
 @app.before_request
 def _gate_request():
-    if APP_PASSWORD:
-        auth = request.authorization
-        if not auth or not auth.password or not hmac.compare_digest(auth.password, APP_PASSWORD):
-            return Response("Authentication required.", 401,
-                            {"WWW-Authenticate": 'Basic realm="Template Builder"'})
-    elif request.remote_addr not in LOOPBACK:
-        return Response("Set APP_PASSWORD to expose this app beyond localhost.", 403)
-
     # Only the model-calling routes cost money; loopback is the operator's own key.
     if request.endpoint in ("chat", "polish_route") and request.remote_addr not in LOOPBACK:
         if _rate_limited(request.remote_addr or "unknown"):
